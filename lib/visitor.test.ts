@@ -37,7 +37,7 @@ describe("resolveIntent", () => {
   function setup() {
     document.body.innerHTML = `
       <section data-intent="reading the section">
-        <a id="cta" data-intent="about to begin" data-intent-press="beginning a braid">
+        <a id="cta" data-intent="about to begin" data-intent-press="joining the waitlist">
           <span id="inner">Begin</span>
         </a>
         <p id="plain">text</p>
@@ -53,7 +53,7 @@ describe("resolveIntent", () => {
 
   it("prefers data-intent-press while pressed", () => {
     setup();
-    expect(resolveIntent(document.getElementById("inner"), true)).toBe("beginning a braid");
+    expect(resolveIntent(document.getElementById("inner"), true)).toBe("joining the waitlist");
     expect(resolveIntent(document.getElementById("plain"), true)).toBe("reading the section");
   });
 

@@ -6,7 +6,9 @@ import styles from "./ManyHands.module.css";
 
 type Lane = {
   agent: AgentId;
-  strand: string;
+  piece: string;
+  /** What the visitor's tag says hovering this lane. */
+  intent: string;
   steps: { text: string; done: boolean }[];
   progress: number;
 };
@@ -14,60 +16,108 @@ type Lane = {
 const LANES: Lane[] = [
   {
     agent: "ren",
-    strand: "Draft the data model",
+    piece: "Draft data model",
+    intent: "admiring schema",
     steps: [
       { text: "sketch entities", done: true },
-      { text: "name the relations", done: true },
-      { text: "write the schema", done: false },
+      { text: "name relations", done: true },
+      { text: "write schema", done: false },
     ],
     progress: 0.72,
   },
   {
     agent: "sol",
-    strand: "Write the onboarding copy",
+    piece: "Write onboarding copy",
+    intent: "proofing copy",
     steps: [
-      { text: "read the brief", done: true },
+      { text: "read brief", done: true },
       { text: "first pass, plain words", done: false },
       { text: "trim by a third", done: false },
     ],
     progress: 0.41,
   },
   {
-    agent: "mika",
-    strand: "Tighten the test suite",
+    agent: "ivo",
+    piece: "Align new screens",
+    intent: "eyeing the grid",
     steps: [
-      { text: "find the flaky ones", done: true },
-      { text: "fix the clock", done: true },
+      { text: "measure spacing", done: true },
+      { text: "set type scale", done: true },
+      { text: "even out margins", done: false },
+    ],
+    progress: 0.64,
+  },
+  {
+    agent: "mika",
+    piece: "Tighten test suite",
+    intent: "trusting tests",
+    steps: [
+      { text: "find flaky ones", done: true },
+      { text: "fix clock", done: true },
       { text: "add edge cases", done: false },
     ],
     progress: 0.93,
   },
   {
     agent: "juno",
-    strand: "Read the payments docs",
+    piece: "Read payments docs",
+    intent: "skimming docs",
     steps: [
-      { text: "skim the guides", done: true },
-      { text: "note the webhooks", done: false },
-      { text: "flag the gotchas", done: false },
+      { text: "skim guides", done: true },
+      { text: "note webhooks", done: false },
+      { text: "flag gotchas", done: false },
     ],
     progress: 0.28,
   },
+  {
+    agent: "oki",
+    piece: "Clear out old helpers",
+    intent: "sweeping up",
+    steps: [
+      { text: "find unused code", done: true },
+      { text: "rename flags", done: false },
+      { text: "remove dead routes", done: false },
+    ],
+    progress: 0.36,
+  },
+  {
+    agent: "bea",
+    piece: "Rough in settings page",
+    intent: "sizing it up",
+    steps: [
+      { text: "block out layout", done: true },
+      { text: "two columns, not three", done: true },
+      { text: "draw mobile view", done: false },
+    ],
+    progress: 0.58,
+  },
+  {
+    agent: "tao",
+    piece: "Check that pieces fit",
+    intent: "checking joints",
+    steps: [
+      { text: "compare pieces", done: true },
+      { text: "run full suite", done: false },
+      { text: "sign off work", done: false },
+    ],
+    progress: 0.19,
+  },
 ];
 
-/** A hand-drawn thread whose length reflects progress. */
-function Thread({ progress }: { progress: number }) {
+/** A hand-drawn rule whose length reflects progress. */
+function Rule({ progress }: { progress: number }) {
   const end = 6 + progress * 188;
   return (
     <svg
-      className={styles.thread}
+      className={styles.rule}
       viewBox="0 0 200 12"
       preserveAspectRatio="none"
       aria-hidden="true"
-      {...build("stroke", "pulling thread")}
+      {...build("stroke", "marking progress")}
     >
-      <path className={styles.threadBase} d="M6 6.5 C 50 4.5, 100 8, 194 5.5" />
+      <path className={styles.ruleBase} d="M6 6.5 C 50 4.5, 100 8, 194 5.5" />
       <path
-        className={styles.threadDone}
+        className={styles.ruleDone}
         data-stroke=""
         d={`M6 6.5 C ${6 + (end - 6) * 0.3} 4.5, ${6 + (end - 6) * 0.6} 8, ${end} 5.8`}
       />
@@ -91,16 +141,19 @@ export function ManyHands() {
           <h2
             id="hands-title"
             className={layout.sectionTitle}
-            data-intent="reading"
+            data-intent="counting hands"
             {...build("type", "titling")}
           >
-            Eight hands, <em>one afternoon.</em>
+            A team of agents, <em>one afternoon.</em>
           </h2>
-          <p className={layout.prose} data-intent="reading" {...build("develop", "setting text")}>
-            Give Kumi a goal and it lays out the strands. Every agent picks one up and works at its
-            own pace, in plain view. You watch the cord take shape instead of waiting at a progress
-            bar.
-          </p>
+          <div
+            className={`${layout.prose} ${styles.description}`}
+            data-intent="nodding along"
+            {...build("develop", "setting text")}
+          >
+            <p>Give Kumi a goal and every agent takes a piece.</p>
+            <p>Watch the work happen instead of staring at a loading spinner.</p>
+          </div>
         </header>
 
         <ol className={styles.lanes}>
@@ -111,7 +164,7 @@ export function ManyHands() {
                 key={lane.agent}
                 className={`${sketch.box} ${styles.lane}`}
                 style={{ "--a": a.color } as React.CSSProperties}
-                data-intent={`watching ${a.name}`}
+                data-intent={lane.intent}
                 {...build("box", "drawing lane", { agent: a.id })}
               >
                 <div className={styles.laneHead} {...build("reveal", "naming lane")}>
@@ -119,8 +172,8 @@ export function ManyHands() {
                   <span className={styles.laneName}>{a.name}</span>
                   <span className={styles.lanePct}>{Math.round(lane.progress * 100)}%</span>
                 </div>
-                <h3 className={styles.strand} {...build("type", "naming strand")}>
-                  {lane.strand}
+                <h3 className={styles.piece} {...build("type", "naming piece")}>
+                  {lane.piece}
                 </h3>
                 <ul className={styles.steps} {...build("list", "listing steps")}>
                   {lane.steps.map((s) => (
@@ -137,7 +190,7 @@ export function ManyHands() {
                     </li>
                   ))}
                 </ul>
-                <Thread progress={lane.progress} />
+                <Rule progress={lane.progress} />
               </li>
             );
           })}

@@ -13,7 +13,7 @@ export function LogEntryRow({ entry, ref }: { entry: LogEntry; ref?: Ref<HTMLLIE
       ref={ref}
       className={styles.entry}
       style={{ "--a": a.color } as React.CSSProperties}
-      data-intent={`reading ${a.name}`}
+      data-intent={a.noteReaction}
       {...build("type", "logging", { agent: a.id, pace: 1.6 })}
     >
       <time className={styles.time}>{entry.time}</time>

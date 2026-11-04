@@ -2,18 +2,18 @@ import { build } from "@/components/swarm/build";
 import styles from "./Wordmark.module.css";
 
 /**
- * Kumi wordmark: three strands crossing into a knot, then the name.
- * With `buildable`, the crew ties the knot and signs the name.
+ * Kumi wordmark: three slats crossing at a joint, then the name.
+ * With `buildable`, the crew sets the joint and signs the name.
  */
 export function Wordmark({ buildable = false }: { buildable?: boolean }) {
   return (
     <span className={styles.mark}>
       <svg
-        className={styles.knot}
+        className={styles.joint}
         viewBox="0 0 32 32"
         aria-hidden="true"
         focusable="false"
-        {...(buildable ? build("stroke", "tying knot", { id: "nav.knot" }) : {})}
+        {...(buildable ? build("stroke", "setting joint", { id: "nav.joint" }) : {})}
       >
         <path d="M5 9c7 1 14 13 22 14" />
         <path d="M5 23c8-1 13-13 22-14" />

@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { TagModeToggle } from "@/components/prefs/Controls";
+import { useMediaQuery } from "@/components/prefs/useMediaQuery";
 import { useTagMode } from "@/components/prefs/usePrefs";
 import { CursorTag } from "@/components/ui/CursorTag";
 import { Pointer } from "@/components/ui/Pointer";
@@ -20,6 +22,9 @@ export function Swarm() {
   const [crew, setCrew] = useState<AgentRuntime[]>([]);
   const [phase, setPhase] = useState<Phase | null>(null);
   const [run, setRun] = useState(0);
+  // No crew under reduced motion, but the visitor's own tag still has a setting.
+  const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const finePointer = useMediaQuery("(pointer: fine)");
   const handoffRef = useRef<Handoff | null>(null);
 
   useEffect(() => {
@@ -63,13 +68,16 @@ export function Swarm() {
           <AgentCursor key={a.id} runtime={a} />
         ))}
       </div>
+      {reduceMotion && finePointer && (
+        <div className={styles.controls}>
+          <TagModeToggle className={styles.controlButton} />
+        </div>
+      )}
       {phase && (
-        <SwarmControls
-          phase={phase}
-          crew={crew}
-          onSkip={() => engineRef.current?.skip()}
-          onReplay={replay}
-        />
+        <>
+          <CrewCount crew={crew} />
+          <SwarmControls phase={phase} onSkip={() => engineRef.current?.skip()} onReplay={replay} />
+        </>
       )}
     </>
   );
@@ -107,19 +115,10 @@ function AgentCursor({ runtime }: { runtime: AgentRuntime }) {
   );
 }
 
-function SwarmControls({
-  phase,
-  crew,
-  onSkip,
-  onReplay,
-}: {
-  phase: Phase;
-  crew: AgentRuntime[];
-  onSkip: () => void;
-  onReplay: () => void;
-}) {
+/** Who is on the crew right now. */
+function CrewCount({ crew }: { crew: AgentRuntime[] }) {
   return (
-    <div className={styles.controls} data-swarm-controls>
+    <div className={styles.crew} data-swarm-crew data-intent="counting heads">
       <span className={styles.crewDots} aria-hidden="true">
         {crew.map((a) => (
           <span key={a.id} style={{ "--c": a.agent.color } as React.CSSProperties} />
@@ -128,6 +127,22 @@ function SwarmControls({
       <span>
         {crew.length} {crew.length === 1 ? "hand" : "hands"}
       </span>
+    </div>
+  );
+}
+
+function SwarmControls({
+  phase,
+  onSkip,
+  onReplay,
+}: {
+  phase: Phase;
+  onSkip: () => void;
+  onReplay: () => void;
+}) {
+  return (
+    <div className={styles.controls} data-swarm-controls>
+      <TagModeToggle className={styles.controlButton} />
       <AnimatePresence mode="wait" initial={false}>
         <motion.button
           key={phase}
@@ -138,10 +153,10 @@ function SwarmControls({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          data-intent={phase === "intro" ? "skipping?" : "encore?"}
-          data-intent-press={phase === "intro" ? "skipping" : "encore"}
+          data-intent={phase === "intro" ? "impatient" : "wanting more"}
+          data-intent-press={phase === "intro" ? "skipping" : "encore!"}
         >
-          {phase === "intro" ? "skip intro" : "replay"}
+          <span>{phase === "intro" ? "skip intro" : "replay"}</span>
         </motion.button>
       </AnimatePresence>
     </div>

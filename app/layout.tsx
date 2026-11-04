@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, IBM_Plex_Mono, Newsreader } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { BootScript } from "@/components/prefs/BootScript";
 import { PaperGrain } from "@/components/ui/PaperGrain";
 import "./globals.css";
@@ -17,6 +17,12 @@ const newsreader = Newsreader({
   axes: ["opsz"],
 });
 
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
+  subsets: ["latin"],
+  weight: ["300", "400"],
+});
+
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
@@ -24,9 +30,8 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kumi - work, braided by many hands",
-  description:
-    "Kumi runs a quiet crew of agents in parallel. Each takes a strand, none waits on another, and the work comes together whole.",
+  title: "Kumi - many hands, one clean fit",
+  description: "Kumi gives every piece of your project its own pair of hands.",
 };
 
 export const viewport: Viewport = {
@@ -40,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${newsreader.variable} ${plexMono.variable}`}
+      className={`${fraunces.variable} ${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
       <head>

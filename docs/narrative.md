@@ -1,87 +1,118 @@
-# Kumi - name and narrative (draft for review)
+# Kumi - name and narrative
 
 ## The name
 
-**Kumi** (組) comes from _kumihimo_, the Japanese craft of braiding cord.
-On a round stand called a _marudai_, many threads are worked at the same time, each moving on its own path.
-No single thread makes the cord.
-The strength comes from many strands crossing, in parallel, under steady hands.
+**Kumi** (組) means to put together, and also a group or crew.
+It is the first half of _kumiko_ (組子), the Japanese woodworking craft of fitting small, separately cut pieces into one lattice without nails.
+No single piece makes the panel.
+The strength comes from every joint fitting the next one.
 
-That is the product: many agents, each holding one strand of the work, braided into one finished result.
+That is the product: many agents, each working on one piece of the job, fitted into one finished result.
 
-The word also means "group" or "crew", which gives it a second reading that fits a swarm.
-It is short, soft to say, and avoids the chrome-and-neon vocabulary of most agent companies.
+The second reading, "crew", fits the eight named agents.
+The word is short, soft to say, and avoids the chrome-and-neon vocabulary of most agent companies.
+
+## Audience and action
+
+The page talks to software teams.
+Its main action is joining the waitlist.
 
 ## Tone
 
 Calm, unhurried, and a little handmade.
-We talk about craft, hands, threads and patience rather than speed, power or autonomy.
+We talk about craft, hands, pieces and care rather than speed, power or autonomy.
 The agents are presented as a crew of quiet craftspeople, not as a machine.
 Imperfection is allowed to show: a stroke that wobbles, a word that gets rewritten.
 
+## Writing rules
+
+No walls of text.
+A description is never 3 or more lines in one block.
+Break descriptions into short stacked lines, at sentence or clause boundaries.
+
+## Type
+
+Section titles are serif (Fraunces).
+Section descriptions are sans-serif (IBM Plex Sans).
+In the hero, the second title line is sans-serif, and "kumi" in the description matches the nav wordmark.
+
 ## One-liner
 
-> Many hands, one cord.
+> Many hands. One clean fit.
 
 ## Hero
 
-**Headline:** Work, braided by many hands.
+**Kicker:** parallel agents, handled with care
 
-**Subcopy:** Kumi runs a quiet crew of agents in parallel.
-Each takes a strand, none waits on another, and the work comes together whole.
+**Headline:** Many hands. One clean fit.
 
-**Primary CTA:** Begin a braid
+**Subcopy:**
+
+- Kumi gives every piece of your project its own pair of hands.
+
+**Primary CTA:** Join the waitlist
+
 **Secondary CTA:** Watch them work
+
+**Ensō caption:** the next innovation, sewn together
 
 ## Sections
 
 ### 1. Many hands
 
-**Heading:** Eight hands, one afternoon.
+**Heading:** A team of agents, one afternoon.
 
-**Body:** Give Kumi a goal and it lays out the strands.
-Every agent picks one up and works at its own pace, in plain view.
-You watch the cord take shape instead of waiting at a progress bar.
+**Body:**
 
-The lanes show agents each working their own strand at the same time: drafting a schema, writing migrations, tightening tests, reading the docs.
+- Give Kumi a goal and every agent takes a piece.
+- Watch the work happen instead of staring at a loading spinner.
+
+Eight notes show every agent working on their own piece at the same time: drafting a schema, writing onboarding copy, aligning screens, tightening tests, reading the docs, clearing old helpers, roughing in a page, and checking that it all fits.
 
 ### 2. How it works
 
-1. **Set the pattern.** Describe what you want made, in plain words.
-2. **Lay the strands.** Kumi splits the work into pieces that can move independently.
-3. **Many hands.** Agents take strands in parallel, and you can watch any of them at any time.
-4. **Draw it tight.** The strands are checked against each other, reconciled, and handed back as one piece.
+**Heading:** Measure. Cut. Shape. Fit.
+
+1. **Measure.** Say what you want made, in plain words.
+2. **Cut.** Kumi splits the work into pieces that can move on their own.
+3. **Shape.** Each agent takes a piece, and you can watch any of them at any time.
+4. **Fit.** Every piece is tested against the others, then handed back as one.
 
 ### 3. Work log
 
 **Heading:** The quiet hum of a workshop.
 
+**Body:**
+
+- Need to step away for a moment?
+- Agents continuously log their work with notes,
+- allowing you to review work on your own schedule.
+
 A calm, timestamped feed of what the crew is doing, appended as you read.
-It shows that work keeps moving even when you are not watching.
 
 ### 4. Closing
 
 **Heading:** The hands are ready.
 
-**Body:** Bring a pattern.
+**Body:** Bring the plans.
 We will bring the crew.
 
-**CTA:** Begin a braid
+**CTA:** Join the waitlist
 
-**Footer sign-off:** Made slowly, by many hands.
+**Footer sign-off:** Made with care, by many hands.
 
 ## The crew
 
-| Name | Color    | Temperament                    |
-| ---- | -------- | ------------------------------ |
-| ren  | sage     | steady, lays the first lines   |
-| sol  | ochre    | warm, writes the words         |
-| ivo  | ash      | precise, measures and aligns   |
-| mika | rose     | careful, reviews and refines   |
-| juno | lavender | curious, explores side strands |
-| oki  | moss     | patient, tidies loose ends     |
-| bea  | clay     | bold, draws the big shapes     |
-| tao  | tea      | calm, signs off the work       |
+| Name | Color    | Temperament                  |
+| ---- | -------- | ---------------------------- |
+| ren  | sage     | steady, lays the first lines |
+| sol  | ochre    | warm, writes the words       |
+| ivo  | ash      | precise, measures and aligns |
+| mika | rose     | careful, reviews and refines |
+| juno | lavender | curious, explores side paths |
+| oki  | moss     | patient, tidies loose ends   |
+| bea  | clay     | bold, draws the big shapes   |
+| tao  | tea      | calm, signs off the work     |
 
 ## The visitor
 

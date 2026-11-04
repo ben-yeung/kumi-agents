@@ -39,11 +39,17 @@
 }
 
 .prose {
+  font-family: var(--font-sans);
+  font-weight: 300;
   max-width: var(--prose-max);
   color: var(--ink-soft);
   font-size: var(--step-1);
-  line-height: 1.55;
+  line-height: 1.4;
   text-wrap: pretty;
+}
+
+.prose p + p {
+  margin-top: 0.3em;
 }
 
 .dot {

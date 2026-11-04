@@ -4,7 +4,7 @@ import type { BuildKind, Rewrite, Task } from "@/components/swarm/types";
 
 /** Every build id in the hero (including the nav). Each choreography covers all of them. */
 export const HERO_IDS = [
-  "nav.knot",
+  "nav.joint",
   "nav.word",
   "nav.links",
   "nav.controls",
@@ -49,7 +49,7 @@ export type Choreography = {
 
 export const CHOREOGRAPHIES: readonly Choreography[] = [
   {
-    // Four hands, each with a clear strand, working at once. The headline leads.
+    // Four hands, each with a clear piece, working at once. The headline leads.
     name: "relay",
     entry: ["left", "right", "bottom", "top"],
     pass: ["hero.copy"],
@@ -57,7 +57,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
       [{ id: "hero.title", rewrite: true }, { id: "hero.kicker" }],
       [{ id: "hero.enso", delay: 0.15 }, { id: "hero.caption" }, { id: "hero.crew" }],
       [{ id: "hero.lede", delay: 0.5, pace: 1.6 }, { id: "hero.cta" }, { id: "hero.watch" }],
-      [{ id: "nav.knot" }, { id: "nav.word" }, { id: "nav.links" }, { id: "nav.controls" }],
+      [{ id: "nav.joint" }, { id: "nav.word" }, { id: "nav.links" }, { id: "nav.controls" }],
     ],
   },
   {
@@ -71,7 +71,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
       ],
       [
         { id: "hero.kicker", delay: 0.1 },
-        { id: "nav.knot" },
+        { id: "nav.joint" },
         { id: "nav.word" },
         { id: "nav.links" },
       ],
@@ -88,7 +88,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
     pass: ["hero.copy"],
     lanes: [
       [{ id: "hero.title" }, { id: "hero.kicker" }],
-      [{ id: "nav.knot" }, { id: "nav.word" }, { id: "nav.links" }],
+      [{ id: "nav.joint" }, { id: "nav.word" }, { id: "nav.links" }],
       [{ id: "hero.lede", kind: "develop" }, { id: "hero.cta" }, { id: "hero.watch" }],
       [{ id: "hero.enso" }, { id: "hero.caption" }],
       [{ id: "nav.controls" }, { id: "hero.crew" }],
@@ -108,7 +108,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
       ],
       [{ id: "hero.enso" }, { id: "hero.caption" }, { id: "hero.kicker" }],
       [
-        { id: "nav.knot", delay: 0.3 },
+        { id: "nav.joint", delay: 0.3 },
         { id: "nav.word" },
         { id: "nav.links" },
         { id: "nav.controls" },
@@ -119,7 +119,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
 ];
 
 const REWRITES: Record<string, string[]> = {
-  braided: ["woven", "spun", "made"],
+  fit: ["cut", "joint", "seam"],
 };
 
 export type HeroPlan = {

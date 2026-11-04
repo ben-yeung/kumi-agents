@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The live crew counter sits in the corner this badge would cover.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
 };

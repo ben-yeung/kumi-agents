@@ -26,9 +26,9 @@ export const BUILD_KINDS: readonly BuildKind[] = [
 ];
 
 export type Rewrite = {
-  /** The word in the final text to stumble on, e.g. "braided". */
+  /** The word in the final text to stumble on, e.g. "fit". */
   word: string;
-  /** What gets typed first, then backspaced, e.g. "woven". */
+  /** What gets typed first, then backspaced, e.g. "cut". */
   wrong: string;
 };
 

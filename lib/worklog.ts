@@ -5,7 +5,7 @@ export type LogEntry = { id: string; time: string; agent: AgentId; text: string 
 
 /** Seed entries for the work log; more are written live while it is read. */
 export const WORKLOG: readonly LogEntry[] = [
-  { id: "w1", time: "09:02", agent: "ren", text: "laid out six strands from the brief" },
+  { id: "w1", time: "09:02", agent: "ren", text: "cut the brief into six pieces" },
   { id: "w2", time: "09:03", agent: "juno", text: "took the payments docs, reading slowly" },
   { id: "w3", time: "09:03", agent: "sol", text: "started a first pass on the welcome email" },
   {
@@ -26,14 +26,14 @@ export const WORKLOG: readonly LogEntry[] = [
     id: "w8",
     time: "09:31",
     agent: "tao",
-    text: "checked the strands against each other, all hold",
+    text: "checked the pieces against each other, all fit",
   },
 ];
 
 /** Things each agent tends to write, in keeping with their temperament. */
 const NOTES: Record<AgentId, readonly string[]> = {
   ren: [
-    "sketched the next strand: search",
+    "sketched the next piece: search",
     "laid groundwork for the import flow",
     "split the export job into three pieces",
   ],
@@ -68,8 +68,8 @@ const NOTES: Record<AgentId, readonly string[]> = {
     "roughed in the mobile layout",
   ],
   tao: [
-    "signed off the settings strand",
-    "pulled two strands together, they hold",
+    "signed off the settings piece",
+    "joined two pieces, clean fit",
     "marked the import flow as ready",
   ],
 };

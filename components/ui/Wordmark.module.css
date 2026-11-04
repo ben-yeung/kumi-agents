@@ -4,7 +4,7 @@
   gap: 0.45rem;
 }
 
-.knot {
+.joint {
   width: 1.6rem;
   height: 1.6rem;
   fill: none;
@@ -14,11 +14,11 @@
   filter: url(#kumi-wobble);
 }
 
-.knot path:nth-child(1) {
+.joint path:nth-child(1) {
   stroke: var(--agent-sage);
 }
 
-.knot path:nth-child(2) {
+.joint path:nth-child(2) {
   stroke: var(--agent-clay);
 }
 

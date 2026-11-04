@@ -5,28 +5,28 @@ import styles from "./HowItWorks.module.css";
 
 const STEPS: { title: string; body: string; by: AgentId; intent: string }[] = [
   {
-    title: "Set the pattern.",
-    body: "Describe what you want made, in plain words.",
+    title: "Measure.",
+    body: "Say what you want made, in plain words.",
     by: "ren",
-    intent: "on pattern",
+    intent: "measuring twice",
   },
   {
-    title: "Lay the strands.",
-    body: "Kumi splits the work into pieces that can move independently.",
+    title: "Cut.",
+    body: "Kumi splits the work into pieces that can move on their own.",
     by: "ivo",
-    intent: "on strands",
+    intent: "cutting clean",
   },
   {
-    title: "Many hands.",
-    body: "Agents take strands in parallel, and you can watch any of them at any time.",
+    title: "Shape.",
+    body: "Each agent takes a piece, and you can watch any of them at any time.",
     by: "bea",
-    intent: "on hands",
+    intent: "shaping by hand",
   },
   {
-    title: "Draw it tight.",
-    body: "The strands are checked against each other, reconciled, and handed back as one piece.",
+    title: "Fit.",
+    body: "Every piece is tested against the others, then handed back as one.",
     by: "tao",
-    intent: "on tightening",
+    intent: "testing the fit",
   },
 ];
 
@@ -48,10 +48,10 @@ export function HowItWorks() {
           <h2
             id="method-title"
             className={layout.sectionTitle}
-            data-intent="studying"
+            data-intent="taking notes"
             {...build("type", "titling")}
           >
-            Four movements, <em>like any craft.</em>
+            Measure. Cut. Shape. <em>Fit.</em>
           </h2>
         </header>
 

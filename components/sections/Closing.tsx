@@ -10,32 +10,32 @@ export function Closing() {
   return (
     <>
       <section
-        id="begin"
+        id="waitlist"
         className={styles.section}
-        aria-labelledby="begin-title"
+        aria-labelledby="waitlist-title"
         {...buildSection("closing")}
       >
         <div className={`${layout.container} ${styles.inner}`}>
           <Enso className={styles.enso} {...build("stroke", "painting ensō")} />
           <h2
-            id="begin-title"
+            id="waitlist-title"
             className={styles.title}
-            data-intent="nearly ready"
+            data-intent="warming up"
             {...build("type", "inviting")}
           >
             The hands are <em>ready.</em>
           </h2>
           <p className={styles.body} data-intent="considering" {...build("type", "promising")}>
-            Bring a pattern. We will bring the crew.
+            Bring the plans. We will bring the crew.
           </p>
           <a
-            href="#begin"
+            href="#waitlist"
             className={button.primary}
-            data-intent="almost in"
-            data-intent-press="beginning"
+            data-intent="ready now"
+            data-intent-press="here goes"
             {...build("box", "shaping button")}
           >
-            Begin a braid
+            Join the waitlist
             <ArrowRight />
           </a>
         </div>
@@ -46,10 +46,10 @@ export function Closing() {
           <Wordmark />
           <p
             className={styles.signoff}
-            data-intent="reading sign-off"
+            data-intent="returning a bow"
             {...build("type", "signing off", { agent: "tao" })}
           >
-            Made slowly, by many hands.
+            Made with care, by many hands.
             <span className={styles.signed}>signed, tao</span>
           </p>
           <p className={styles.small}>&copy; 2026 Kumi</p>

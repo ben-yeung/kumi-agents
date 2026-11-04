@@ -112,15 +112,13 @@
 
 /* ------------------------------------------------------------ controls */
 
-.controls {
+.controls,
+.crew {
   position: fixed;
-  right: max(var(--gutter), env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 95;
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.3rem 0.35rem 0.3rem 0.85rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: color-mix(in srgb, var(--paper) 88%, transparent);
@@ -129,6 +127,50 @@
   font-family: var(--font-mono);
   font-size: var(--step--1);
   color: var(--ink-faint);
+}
+
+/* Two matching buttons, sized for the longest label so nothing shifts. */
+.controls {
+  right: max(var(--gutter), env(safe-area-inset-right));
+  gap: 0.3rem;
+  padding: 0.3rem;
+}
+
+.controlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  width: 7.4em;
+  height: 2.1em;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--paper-raised);
+  transition: background-color 200ms var(--ease-soft);
+}
+
+.controlButton:hover {
+  background: var(--paper-sunk);
+}
+
+/* The mono face rides low in its line box; lift labels onto the pill's center
+   line. Only the text moves, so icons and dots stay centered. */
+.controlButton > span {
+  position: relative;
+  top: -0.08em;
+}
+
+/* Numerals stand taller than lowercase, so the count needs less. */
+.crew > span:last-child {
+  position: relative;
+  top: -0.04em;
+}
+
+.crew {
+  left: max(var(--gutter), env(safe-area-inset-left));
+  gap: 0.6rem;
+  height: calc(2.1em + 0.6rem + 2px);
+  padding: 0 0.95rem;
 }
 
 .crewDots {
@@ -143,14 +185,9 @@
   background: var(--c);
 }
 
-.controlButton {
-  padding: 0.3em 0.8em;
-  border-radius: 999px;
-  color: var(--ink);
-  background: var(--paper-raised);
-  transition: background-color 200ms var(--ease-soft);
-}
-
-.controlButton:hover {
-  background: var(--paper-sunk);
+/* Phones: the two pills share one row, so the dots give way to the count. */
+@media (max-width: 34rem) {
+  .crewDots {
+    display: none;
+  }
 }

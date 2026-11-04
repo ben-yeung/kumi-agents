@@ -17,7 +17,7 @@ export const HERO_SECTION = "hero";
 
 const LAST_CHOREO_KEY = "kumi-last-choreo";
 
-const IDLE_ACTIONS = ["resting", "stretching", "waiting", "reading", "tidying", "watching you"];
+const IDLE_ACTIONS = ["resting", "stretching", "waiting", "pausing", "tidying"];
 
 export type Phase = "intro" | "settled";
 
@@ -272,7 +272,8 @@ export class SwarmEngine {
         (id) => !wanted.has(id) && !this.crew.some((a) => a.id === id),
       ),
     );
-    const count = Math.min(free, wanted.size > 1 ? 2 : 1);
+    // Everyone a section names comes at once, so each builds their own work.
+    const count = Math.min(free, Math.max(wanted.size, 1));
     const edges: Edge[] = ["left", "right", "bottom"];
     [...wanted, ...rest].slice(0, count).forEach((id) => this.spawn(id, this.rng.pick(edges)));
   }

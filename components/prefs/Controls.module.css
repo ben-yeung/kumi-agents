@@ -28,19 +28,40 @@
   stroke-linejoin: round;
 }
 
-.text {
-  font-family: var(--font-mono);
-  font-size: var(--step--1);
-  letter-spacing: 0.01em;
+/* A tiny cursor tag: the line inside is the action it shows or hides.
+   Size and surface come from the bar that holds it. */
+.tagToggle {
+  transition: color 200ms var(--ease-soft);
 }
 
-.label {
+.tagToggle[data-mode="names"] {
   color: var(--ink-faint);
 }
 
-.value {
-  min-width: 7.5em;
-  text-align: left;
+.tagToggle svg {
+  width: 1.3rem;
+  height: auto;
+  overflow: visible;
+}
+
+.tagToggle rect,
+.tagToggle path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.tagToggle circle {
+  fill: currentColor;
+}
+
+.tagToggle path {
+  transition: opacity 200ms var(--ease-soft);
+}
+
+.tagToggle[data-mode="names"] path {
+  opacity: 0;
 }
 
 /* Icon shows the theme you would switch to. */
@@ -65,13 +86,4 @@
 }
 :root[data-theme="dark"] .sun {
   display: block;
-}
-
-@media (max-width: 40rem) {
-  .label {
-    display: none;
-  }
-  .value {
-    min-width: 0;
-  }
 }

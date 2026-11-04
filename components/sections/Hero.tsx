@@ -18,7 +18,7 @@ export function Hero() {
         <div className={styles.copy} {...build("frame", "scaffolding", { id: "hero.copy" })}>
           <p
             className={layout.kicker}
-            data-intent="reading"
+            data-intent="squinting"
             {...build("type", "noting premise", { id: "hero.kicker" })}
           >
             parallel agents, handled with care
@@ -26,35 +26,37 @@ export function Hero() {
           <h1
             id="hero-title"
             className={styles.title}
-            data-intent="reading title"
+            data-intent="savoring title"
             {...build("type", "drafting title", { id: "hero.title" })}
           >
-            Work, braided by <em>many hands.</em>
+            Many hands. <em>One clean fit.</em>
           </h1>
-          <p
+          <div
             className={styles.lede}
-            data-intent="reading lede"
+            data-intent="mulling it over"
             {...build("type", "writing lede", { id: "hero.lede" })}
           >
-            Kumi runs a quiet crew of agents in parallel. Each takes a strand, none waits on
-            another, and the work comes together whole.
-          </p>
+            <p>
+              <span className={styles.brand}>kumi</span> gives every piece of your project its own
+              pair of hands.
+            </p>
+          </div>
           <div className={styles.actions}>
             <a
-              href="#begin"
+              href="#waitlist"
               className={button.primary}
-              data-intent="almost in"
-              data-intent-press="beginning"
+              data-intent="feeling brave"
+              data-intent-press="signing up"
               {...build("box", "shaping button", { id: "hero.cta" })}
             >
-              Begin a braid
+              Join the waitlist
               <ArrowRight />
             </a>
             <a
               href="#hands"
               className={button.secondary}
-              data-intent="curious"
-              data-intent-press="watching"
+              data-intent="pulling a chair"
+              data-intent-press="sitting down"
               {...build("reveal", "adding link", { id: "hero.watch" })}
             >
               Watch them work
@@ -72,7 +74,7 @@ export function Hero() {
             className={styles.caption}
             {...build("type", "captioning", { id: "hero.caption" })}
           >
-            one cord, eight strands
+            the next innovation, sewn together
           </figcaption>
         </figure>
       </div>
@@ -90,7 +92,7 @@ export function Hero() {
               key={a.id}
               className={styles.member}
               style={{ "--a": a.color } as React.CSSProperties}
-              data-intent={`waving at ${a.name}`}
+              data-intent={a.greeting}
               title={a.temperament}
             >
               <span className={layout.dot} />

@@ -42,9 +42,9 @@
   gap: 0.25rem;
 }
 
-.begin {
+.join {
   margin-left: 0.5rem;
-  padding: 0.45em 1.05em 0.5em;
+  padding: 0.5em 1.05em 0.45em;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   font-size: var(--step--1);
@@ -54,7 +54,7 @@
     border-color 200ms var(--ease-soft);
 }
 
-.begin:hover {
+.join:hover {
   background: var(--paper-raised);
   border-color: var(--ink-faint);
 }

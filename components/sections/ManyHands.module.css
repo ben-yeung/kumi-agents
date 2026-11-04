@@ -10,12 +10,16 @@
 .intro {
   display: grid;
   gap: 1.25rem;
-  max-width: 44rem;
+  max-width: 56rem;
+}
+
+.intro .description {
+  max-width: none;
 }
 
 .lanes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(1rem, 1.6vw, 1.75rem);
 }
 
@@ -50,7 +54,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.strand {
+.piece {
   font-family: var(--font-display);
   font-size: var(--step-1);
   font-weight: 400;
@@ -93,7 +97,7 @@
   text-decoration-color: color-mix(in srgb, var(--ink-faint) 50%, transparent);
 }
 
-.thread {
+.rule {
   display: block;
   width: 100%;
   height: 0.75rem;
@@ -101,20 +105,33 @@
   overflow: visible;
 }
 
-.threadBase,
-.threadDone {
+.ruleBase,
+.ruleDone {
   fill: none;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
 
-.threadBase {
+.ruleBase {
   stroke: var(--line);
   stroke-width: 1.5;
   stroke-dasharray: 2 5;
 }
 
-.threadDone {
+.ruleDone {
   stroke: var(--a);
   stroke-width: 2.5;
+}
+
+/* Eight notes: two rows of four, then four rows of two, then one column. */
+@media (max-width: 60rem) {
+  .lanes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 34rem) {
+  .lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

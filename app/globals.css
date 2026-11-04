@@ -36,6 +36,7 @@
   /* Type */
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
   --font-body: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
 
   --step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
@@ -49,7 +50,7 @@
   --gutter: clamp(1rem, 0.6rem + 2vw, 3rem);
   --section-gap: clamp(5rem, 3rem + 8vw, 11rem);
   --content-max: 82rem;
-  --prose-max: 34rem;
+  --prose-max: 40rem;
 
   --radius: 0.5rem;
   --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);

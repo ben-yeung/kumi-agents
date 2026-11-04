@@ -26,10 +26,15 @@ export function WorkLog() {
           >
             The quiet hum <em>of a workshop.</em>
           </h2>
-          <p className={layout.prose} {...build("develop", "setting text")}>
-            Work keeps moving while you are elsewhere. Every strand leaves a short note, so you can
-            read back what happened and who did it.
-          </p>
+          <div
+            className={layout.prose}
+            data-intent="leaning in"
+            {...build("develop", "setting text")}
+          >
+            <p>Need to step away for a moment?</p>
+            <p>Agents continuously log their work with notes,</p>
+            <p>allowing you to review work on your own schedule.</p>
+          </div>
         </header>
 
         <ol id={WORKLOG_LIST_ID} className={styles.log} aria-label="Recent activity">

@@ -26,8 +26,8 @@ export function ThemeToggle() {
       className={styles.control}
       onClick={toggle}
       aria-label="Switch between light and dark"
-      data-intent="lighting"
-      data-intent-press="dimming"
+      data-intent="eyeing lamp"
+      data-intent-press="flicking lamp"
     >
       <svg className={styles.sun} viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="4.2" />
@@ -40,21 +40,27 @@ export function ThemeToggle() {
   );
 }
 
-export function TagModeToggle() {
+export function TagModeToggle({ className }: { className?: string }) {
   const [mode, setMode] = useTagMode();
   const next = mode === "actions" ? "names" : "actions";
 
   return (
     <button
       type="button"
-      className={`${styles.control} ${styles.text}`}
+      className={[styles.tagToggle, className].filter(Boolean).join(" ")}
       onClick={() => setMode(next)}
-      aria-pressed={mode === "names"}
-      data-intent="tag mode"
-      data-intent-press="quieting"
+      aria-label="Show actions in cursor tags"
+      aria-pressed={mode === "actions"}
+      data-mode={mode}
+      data-intent={mode === "actions" ? "hushing tags" : "unmuting tags"}
+      data-intent-press={mode === "actions" ? "shh" : "speak up"}
     >
-      <span className={styles.label}>tags</span>
-      <span className={styles.value}>{mode === "actions" ? "name · action" : "name"}</span>
+      <svg viewBox="0 0 24 14" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="22" height="12" rx="6" />
+        <circle cx="6.5" cy="7" r="1.6" />
+        <path d="M11 7h8" />
+      </svg>
+      <span>{mode}</span>
     </button>
   );
 }

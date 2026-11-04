@@ -46,7 +46,7 @@ async function heroSettledMs(page) {
     window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
   );
   await page.waitForTimeout(60000);
-  const label = await page.locator("[data-swarm-controls]").textContent();
+  const label = await page.locator("[data-swarm-crew]").textContent();
   check("crew thins when idle", Number(label.match(/(\d+) hands?/)?.[1]) <= 3, label);
   const unbuilt = await page.locator("[data-build]:not([data-built])").count();
   check("everything built", unbuilt === 0, `${unbuilt} unbuilt`);
@@ -94,6 +94,9 @@ async function heroSettledMs(page) {
 }
 
 // 3. Reduced motion shows the finished page with no crew.
+const symmetry = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await symmetry.goto(base);
+await symmetry.locator("[data-swarm-controls]").waitFor();
 {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 900 },
@@ -106,6 +109,35 @@ async function heroSettledMs(page) {
   const agents = await page.locator("[data-swarm-controls]").count();
   check("reduced motion: no swarm", swarm === null && agents === 0, `swarm=${swarm}`);
   check("reduced motion: content visible", opacity === "1", `opacity=${opacity}`);
+  const [tagBox, replayBox] = await Promise.all([
+    symmetry.locator("[data-swarm-controls] button").nth(0).boundingBox(),
+    symmetry.locator("[data-swarm-controls] button").nth(1).boundingBox(),
+  ]);
+  check(
+    "bar buttons are symmetrical",
+    tagBox.width === replayBox.width && tagBox.height === replayBox.height,
+    `${tagBox.width}x${tagBox.height} / ${replayBox.width}x${replayBox.height}`,
+  );
+  await symmetry.close();
+  check(
+    "reduced motion: tag setting stays reachable",
+    (await page.getByRole("button", { name: "Show actions in cursor tags" }).count()) === 1,
+  );
+
+  // Hover statuses are short, and no two elements say the same thing.
+  const intents = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-intent], [data-intent-press]")].flatMap((el) =>
+      [el.dataset.intent, el.dataset.intentPress].filter(Boolean),
+    ),
+  );
+  const repeats = intents.filter((t, i) => intents.indexOf(t) !== i);
+  const long = intents.filter((t) => t.length > 16);
+  check("hover statuses are unique", repeats.length === 0, repeats.join(", "));
+  check(
+    "hover statuses are short",
+    long.length === 0,
+    `${intents.length} total ${long.join(", ")}`,
+  );
   await page.close();
 }
 
