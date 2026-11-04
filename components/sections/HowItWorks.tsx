@@ -33,14 +33,6 @@ const STEPS: { title: string; body: string; by: AgentId; intent: string }[] = [
 
 const NUMERALS = ["i", "ii", "iii", "iv"];
 
-/** The strand under the steps, read left to right. */
-const PARTS: { label: string; by: AgentId; after: string }[] = [
-  { label: "one brief", by: "ren", after: "strand.measure" },
-  { label: "a strand for each hand", by: "ivo", after: "strand.cut" },
-  { label: "worked side by side", by: "bea", after: "strand.shape" },
-  { label: "fit back as one", by: "tao", after: "strand.fit" },
-];
-
 export function HowItWorks() {
   return (
     <section
@@ -110,20 +102,6 @@ export function HowItWorks() {
           data-intent="tracing strands"
         >
           <Strand />
-          <ol className={styles.parts} aria-hidden="true">
-            {PARTS.map((p, i) => (
-              <li
-                key={p.label}
-                className={styles.part}
-                style={{ "--a": agent(p.by).color } as React.CSSProperties}
-                data-build-agent={p.by}
-                {...build("reveal", "labeling strand", { after: [p.after] })}
-              >
-                <span className={styles.partNumeral}>{NUMERALS[i]}</span>
-                <span className={styles.partLabel}>{p.label}</span>
-              </li>
-            ))}
-          </ol>
         </figure>
       </div>
     </section>

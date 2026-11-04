@@ -42,6 +42,7 @@ The swarm engine in `components/swarm/` reads those attributes and turns each on
 
 Anything marked with an agent's name is only ever done by that agent.
 If they are away the engine calls them in, and the crew counter follows.
+Between jobs nobody stands about: agents check finished work with a loupe or line up what is next, and they leave the page for a named objective.
 Live work uses the same rule: work-log rows, and errands such as moving a card along the #hands board.
 
 The overall pace is one constant, `TEMPO` in `engine.ts`.
@@ -56,7 +57,8 @@ Run `npx playwright install chromium` once first.
 
 ```bash
 node e2e/behaviors.mjs http://localhost:3000       # behavior checks
-node e2e/crew.mjs http://localhost:3000            # authorship, rotation, notes and board
+node e2e/crew.mjs http://localhost:3000            # authorship, rotation, notes, board, footer
+node e2e/intro-idle.mjs http://localhost:3000 --strict  # nobody stands still or says anything passive
 node e2e/screenshots.mjs http://localhost:3000     # mobile, laptop, 4K, both themes
 node e2e/intro-frames.mjs http://localhost:3000    # frames of the intro and scroll build
 ```

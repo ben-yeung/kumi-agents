@@ -41,13 +41,13 @@ async function heroSettledMs(page) {
   const rows = await page.locator("#worklog > li").count();
   check("work log grows live", rows > 8, `${rows} rows`);
 
-  // Spare hands go home once everything is settled; a few stay, in rotation.
+  // Hands head off to other work once everything is settled; a few stay, in rotation.
   await page.evaluate(() =>
     window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
   );
   await page.waitForTimeout(60000);
   const label = await page.locator("[data-swarm-crew]").textContent();
-  check("crew thins when idle", Number(label.match(/(\d+) hands?/)?.[1]) <= 5, label);
+  check("crew thins when settled", Number(label.match(/(\d+) hands?/)?.[1]) <= 6, label);
   const unbuilt = await page.locator("[data-build]:not([data-built])").count();
   check("everything built", unbuilt === 0, `${unbuilt} unbuilt`);
 

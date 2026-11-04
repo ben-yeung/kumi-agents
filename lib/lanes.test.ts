@@ -32,7 +32,7 @@ describe("lanes", () => {
       const rng = createRng(seed);
       let work: Work = INITIAL_WORK;
       for (const { agent } of LANES) {
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 100; i++) {
           const lane = work.lanes.find((l) => l.agent === agent)!;
           const visit = planVisit(lane, rng);
           if (!visit) break;

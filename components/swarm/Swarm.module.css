@@ -16,17 +16,6 @@
   left: 0;
   width: 0;
   height: 0;
-  transition: opacity 600ms var(--ease-soft);
-}
-
-.agent[data-idle="true"] {
-  opacity: 0.72;
-}
-
-@media (max-width: 40rem) {
-  .agent[data-idle="true"] {
-    opacity: 0.4;
-  }
 }
 
 .press {
@@ -115,7 +104,7 @@
 .controls,
 .crewAnchor {
   position: fixed;
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  bottom: var(--pill-bottom);
   z-index: 95;
 }
 
@@ -181,7 +170,7 @@
 
 .crew {
   gap: 0.6rem;
-  height: calc(2.1em + 0.6rem + 2px);
+  height: var(--pill-height);
   padding: 0 0.95rem;
 }
 

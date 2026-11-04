@@ -83,24 +83,14 @@ export function Swarm() {
   );
 }
 
-const IDLE_TAG_QUIET_MS = 2400;
-
 function AgentCursor({ runtime }: { runtime: AgentRuntime }) {
   const snap = useSyncExternalStore(runtime.subscribe, runtime.snapshot, runtime.snapshot);
   const [tagMode] = useTagMode();
-  // Idle agents say what they are up to briefly, then fall quiet to just a name.
-  const [quietFor, setQuietFor] = useState<string | null>(null);
-  useEffect(() => {
-    if (!snap.idle) return;
-    const t = window.setTimeout(() => setQuietFor(snap.action), IDLE_TAG_QUIET_MS);
-    return () => window.clearTimeout(t);
-  }, [snap.idle, snap.action]);
-  const quiet = snap.idle && quietFor === snap.action;
   return (
     <motion.div
       className={styles.agent}
       style={{ x: runtime.x, y: runtime.y, "--c": runtime.agent.color } as never}
-      data-idle={snap.idle}
+      data-swarm-agent=""
       data-pressed={snap.pressed}
     >
       <div className={styles.press}>
@@ -108,7 +98,7 @@ function AgentCursor({ runtime }: { runtime: AgentRuntime }) {
       </div>
       <CursorTag
         name={runtime.agent.name}
-        action={tagMode === "actions" && !quiet ? snap.action : null}
+        action={tagMode === "actions" ? snap.action : null}
         flipX={snap.flipX}
       />
     </motion.div>

@@ -45,17 +45,32 @@
   margin-bottom: 0.75rem;
 }
 
+/* The row is as tall as twice the pills' center line, so with the page scrolled
+   to the end the footer's content sits level with the floating pills. */
 .footer {
+  --pill-center: calc(var(--pill-bottom) + var(--pill-height) / 2);
   border-top: 1px solid var(--line);
-  padding-block: 2.5rem;
+  padding-block-start: 1.75rem;
 }
 
+/* Equal outer columns and equal side padding keep the middle on the page's
+   center line, and the padding clears the pills where they would meet. */
 .footInner {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem 2rem;
+  min-height: calc(2 * var(--pill-center));
+  padding-inline: max(
+    var(--gutter),
+    calc(var(--gutter) + 15rem - (100vw - var(--content-max)) / 2)
+  );
+}
+
+.footCenter {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
 }
 
 .signoff {
@@ -90,14 +105,21 @@
   color: var(--ink-faint);
 }
 
-@media (max-width: 40rem) {
+/* No room beside the pills: the footer stacks, centered, above them. */
+@media (max-width: 70rem) {
   .footInner {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    padding-inline: var(--gutter);
+    padding-block-end: calc(var(--pill-bottom) + var(--pill-height) + 1.25rem);
+    text-align: center;
   }
+}
 
+@media (max-width: 40rem) {
   .signoff {
     flex-direction: column;
+    align-items: center;
     gap: 0.25rem;
   }
 }

@@ -116,6 +116,17 @@ function fadeOutAndRemove(div: HTMLElement, ms = 450, delay = 0) {
   a.onfinish = () => div.remove();
 }
 
+/** A dotted guide laid over finished work while an agent measures it. */
+export function guideOver(overlay: HTMLElement, color: string, r: Rect) {
+  const div = document.createElement("div");
+  div.className = styles.marquee;
+  div.dataset.fx = "";
+  div.style.setProperty("--c", color);
+  place(div, r);
+  overlay.appendChild(div);
+  fadeOutAndRemove(div, 500, 1100);
+}
+
 /** A faint wash of the builder's color that lingers, then fades: "ren was here". */
 function glow(ctx: EffectContext, r: Rect) {
   if (ctx.skipping()) return;

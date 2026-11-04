@@ -52,6 +52,10 @@
   --content-max: 82rem;
   --prose-max: 40rem;
 
+  /* The floating pills, so the footer can line up with them. */
+  --pill-height: calc(2.1 * var(--step--1) + 0.6rem + 2px);
+  --pill-bottom: max(1rem, env(safe-area-inset-bottom));
+
   --radius: 0.5rem;
   --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
 }

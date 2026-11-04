@@ -8,8 +8,10 @@ export type Agent = {
   temperament: string;
   /** What the visitor's tag says hovering this agent in the crew row. */
   greeting: string;
-  /** What the visitor's tag says hovering this agent's log note. */
+  /** What the visitor's tag says reviewing this agent's log note. */
   noteReaction: string;
+  /** The work they head off to when they leave the page. */
+  objectives: readonly string[];
 };
 
 export const AGENTS: readonly Agent[] = [
@@ -19,7 +21,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-sage)",
     temperament: "lays the first lines",
     greeting: "nodding at ren",
-    noteReaction: "thanking ren",
+    noteReaction: "querying scope",
+    objectives: ["off to sketch search", "off to scope imports"],
   },
   {
     id: "sol",
@@ -27,7 +30,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-ochre)",
     temperament: "writes the words",
     greeting: "waving at sol",
-    noteReaction: "quoting sol",
+    noteReaction: "red-penning sol",
+    objectives: ["off to draft the docs", "off to edit release notes"],
   },
   {
     id: "ivo",
@@ -35,7 +39,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-ash)",
     temperament: "measures and aligns",
     greeting: "saluting ivo",
-    noteReaction: "double-taking",
+    noteReaction: "auditing ivo",
+    objectives: ["off to audit spacing", "off to align the tables"],
   },
   {
     id: "mika",
@@ -43,7 +48,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-rose)",
     temperament: "reviews and refines",
     greeting: "smiling at mika",
-    noteReaction: "agreeing, mika",
+    noteReaction: "reviewing mika",
+    objectives: ["off to review a PR", "off to chase a flaky test"],
   },
   {
     id: "juno",
@@ -51,7 +57,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-lavender)",
     temperament: "explores side paths",
     greeting: "high-fiving juno",
-    noteReaction: "curious too",
+    noteReaction: "vetting sources",
+    objectives: ["off to read the SDK", "off to trace a webhook"],
   },
   {
     id: "oki",
@@ -59,7 +66,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-moss)",
     temperament: "tidies loose ends",
     greeting: "bowing to oki",
-    noteReaction: "crediting oki",
+    noteReaction: "spot-checking",
+    objectives: ["off to clear the backlog", "off to prune old flags"],
   },
   {
     id: "bea",
@@ -67,7 +75,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-clay)",
     temperament: "draws the big shapes",
     greeting: "cheering bea",
-    noteReaction: "applauding bea",
+    noteReaction: "marking up bea",
+    objectives: ["off to rough in pricing", "off to draw the mobile view"],
   },
   {
     id: "tao",
@@ -75,7 +84,8 @@ export const AGENTS: readonly Agent[] = [
     color: "var(--agent-tea)",
     temperament: "signs off the work",
     greeting: "tipping hat, tao",
-    noteReaction: "trusting tao",
+    noteReaction: "holding sign-off",
+    objectives: ["off to sign off a release", "off to run the full suite"],
   },
 ];
 

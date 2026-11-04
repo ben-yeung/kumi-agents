@@ -183,8 +183,8 @@ export type Visit = {
   tick: number | null;
 };
 
-const MIN_STEP = 0.1;
-const MAX_STEP = 0.22;
+const MIN_STEP = 0.05;
+const MAX_STEP = 0.12;
 
 /**
  * What an agent does on one visit: moves progress on, finishing their current
@@ -224,8 +224,13 @@ export function finishStep(work: Work, agent: AgentId, step: number, hold = fals
   return {
     ...next,
     recent: [cardId(agent, step), ...next.recent],
-    waiting: hold && upcoming !== -1 ? [cardId(agent, upcoming)] : next.waiting,
+    waiting: hold && upcoming !== -1 ? [...next.waiting, cardId(agent, upcoming)] : next.waiting,
   };
+}
+
+/** The card an agent has left waiting in Planned, if any. */
+export function heldCard(work: Work, agent: AgentId) {
+  return work.waiting.find((id) => id.startsWith(`${agent}-`)) ?? null;
 }
 
 /** The held card moves over to In progress. */
@@ -242,7 +247,11 @@ export function settleVisit(work: Work, visit: Visit): Work {
   const lane = work.lanes.find((l) => l.agent === visit.agent)!;
   const ticked = visit.tick === null || lane.steps[visit.tick].done;
   const after = ticked ? work : finishStep(work, visit.agent, visit.tick!);
-  return { ...setProgress(after, visit.agent, visit.to), waiting: [] };
+  const held = heldCard(after, visit.agent);
+  return {
+    ...setProgress(after, visit.agent, visit.to),
+    waiting: after.waiting.filter((id) => id !== held),
+  };
 }
 
 /** Whoever has gone longest without a visit, among those the visitor can see. */

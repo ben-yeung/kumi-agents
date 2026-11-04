@@ -33,7 +33,7 @@ async function watch(page) {
       const w = window.__watch;
       const count = document.querySelector("[data-swarm-crew]")?.textContent.match(/\d+/)?.[0];
       if (count && w.counts.at(-1) !== count) w.counts.push(count);
-      const cursors = [...document.querySelectorAll('[class*="Swarm-module"][class*="agent"]')];
+      const cursors = [...document.querySelectorAll("[data-swarm-agent]")];
       for (const c of cursors) {
         const n = nameOf(c);
         if (n && !w.faces.includes(n)) w.faces.push(n);
@@ -81,6 +81,48 @@ await Promise.all(
   }),
 );
 
+// Footer lines up with the floating pills at the end of the page.
+for (const width of [1440, 2560]) {
+  const page = await browser.newPage({ viewport: { width, height: 900 } });
+  await page.goto(base);
+  await page.getByRole("button", { name: "skip intro" }).click();
+  await page.getByRole("button", { name: "replay" }).waitFor({ timeout: 40000 });
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForTimeout(400);
+  const m = await page.evaluate(() => {
+    const box = (el) => el.getBoundingClientRect();
+    const mid = (r) => r.top + r.height / 2;
+    const foot = document.querySelector("footer");
+    const mark = box(foot.querySelector("a, div > *"));
+    const center = box(foot.querySelector("p").parentElement);
+    const pill = box(document.querySelector("[data-swarm-crew]"));
+    const bar = box(document.querySelector("[data-swarm-controls]"));
+    const copy = box(foot.querySelector("p:last-child"));
+    const signed = box(foot.querySelector("p"));
+    return {
+      offset: Math.abs(mid(center) - mid(pill)),
+      markOffset: Math.abs(mid(mark) - mid(bar)),
+      centered: Math.abs(copy.left + copy.width / 2 - (signed.left + signed.width / 2)),
+      below: copy.top >= signed.bottom - 1,
+      gap: mark.left - pill.right,
+      pageCenter: Math.abs(center.left + center.width / 2 - document.body.clientWidth / 2),
+    };
+  });
+  check(
+    `${width}: footer lines up with the pills`,
+    m.offset <= 1.5 &&
+      m.markOffset <= 1.5 &&
+      m.centered <= 1.5 &&
+      m.pageCenter <= 1.5 &&
+      m.below &&
+      m.gap > 0,
+    JSON.stringify(m),
+  );
+  await page.close();
+}
+
 // 3. Notes move on by themselves, and the crew menu tells who is here.
 {
   const { page, errors } = await settledPage(1440);
@@ -110,6 +152,24 @@ await Promise.all(
     { timeout: 40000 },
   );
   check("notes update over time", true, `${before} -> ${await pct()}`);
+
+  // While the notes are in view, agents are working on them, not standing about.
+  const crewWords = await page.evaluate(async () => {
+    const seen = new Set();
+    for (let i = 0; i < 80; i++) {
+      for (const el of document.querySelectorAll("[data-swarm-agent]")) {
+        seen.add(el.textContent.trim().replace(/^\w+\W+/, ""));
+      }
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    return [...seen];
+  });
+  // Tags type their words out, so only finished wording counts.
+  const whole = crewWords.filter((w) => !crewWords.some((o) => o !== w && o.startsWith(w)));
+  const heavy = whole.filter((w) => /review|proofread/.test(w));
+  check("reviewing is not everyone's job", heavy.length <= 1, whole.join(", "));
+  const passive = whole.filter((w) => /\b(rest|paus|wait|leav|stretch|tidy)/.test(w));
+  check("no passive statuses", passive.length === 0, passive.join(", "));
 
   await page.locator("[data-swarm-crew]").hover();
   const menu = page.locator("#crew-menu li");
@@ -148,7 +208,7 @@ await Promise.all(
       const lifted = document.querySelector('[class*="lifted"]');
       if (!lifted) return;
       const author = lifted.getAttribute("data-agent");
-      const carrier = [...document.querySelectorAll('[class*="Swarm-module"][class*="agent"]')]
+      const carrier = [...document.querySelectorAll("[data-swarm-agent]")]
         .map((c) => c.textContent.trim())
         .find((t) => /moving card|picking up/.test(t));
       window.__drag.push({ author, carrier });

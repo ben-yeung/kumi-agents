@@ -18,7 +18,6 @@ export class Aborted extends Error {
 export type AgentSnapshot = {
   action: string | null;
   pressed: boolean;
-  idle: boolean;
   flipX: boolean;
   /** The pointer shows what the agent is doing with its hands. */
   tool: PointerVariant;
@@ -43,7 +42,6 @@ export class AgentRuntime {
   private snap: AgentSnapshot = {
     action: null,
     pressed: false,
-    idle: false,
     flipX: false,
     tool: "dart",
   };
@@ -95,8 +93,8 @@ export class AgentRuntime {
     this.listeners.forEach((l) => l());
   }
 
-  setAction(action: string | null, idle = false) {
-    this.patch({ action, idle });
+  setAction(action: string | null) {
+    this.patch({ action });
   }
 
   private check() {

@@ -17,6 +17,7 @@ import {
   INITIAL_WORK,
   LANES,
   finishStep,
+  heldCard,
   isFinished,
   pickLane,
   planVisit,
@@ -35,8 +36,10 @@ import styles from "./ManyHands.module.css";
 type View = "notes" | "board";
 
 const SECTION = "hands";
-const FIRST_VISIT_MS: [number, number] = [3000, 6000];
-const VISIT_MS: [number, number] = [6000, 12_000];
+const FIRST_VISIT_MS: [number, number] = [1200, 2600];
+const VISIT_MS: [number, number] = [2500, 5000];
+/** Agents working on their own notes at the same moment. */
+const MAX_VISITS = 2;
 /** The foot of a column fades out; cards under it are not worked on. */
 const COLUMN_FADE = 56;
 
@@ -66,7 +69,7 @@ export function LiveHands() {
     const lastVisit = new Map<AgentId, number>();
     let started = false;
     let inView = false;
-    let visiting = false;
+    const visiting = new Set<AgentId>();
     let run = 0;
     let timer = 0;
 
@@ -104,18 +107,20 @@ export function LiveHands() {
 
     function visit() {
       if (workRef.current.lanes.every(isFinished)) return;
-      if (visiting || !inView || document.hidden) return schedule(VISIT_MS);
-      const lane = pickLane(workRef.current.lanes, visibleAgents(), lastVisit);
+      if (visiting.size >= MAX_VISITS || !inView || document.hidden) return schedule(VISIT_MS);
+      const free = visibleAgents().filter((id) => !visiting.has(id));
+      const lane = pickLane(workRef.current.lanes, free, lastVisit);
       if (!lane) return schedule(VISIT_MS);
       const plan = planVisit(lane, rng);
       if (!plan) return schedule(VISIT_MS);
-      visiting = true;
+      visiting.add(lane.agent);
       lastVisit.set(lane.agent, performance.now());
+      schedule(VISIT_MS);
       window.dispatchEvent(
         new CustomEvent<Errand>(CREW_ERRAND_EVENT, {
           detail: {
             agent: lane.agent,
-            label: "checking in",
+            label: "updating progress",
             section: SECTION,
             el: root!,
             run: (ctx) => carryOut(ctx, lane, plan),
@@ -134,10 +139,10 @@ export function LiveHands() {
         finishStep: (hold) =>
           live() && update((w) => finishStep(w, plan.agent, plan.tick!, hold), true),
         startNext: () => {
-          const id = workRef.current.waiting[0];
+          const id = heldCard(workRef.current, plan.agent);
           if (id && live()) update((w) => startCard(w, id), true);
         },
-        nextCard: () => workRef.current.waiting[0] ?? null,
+        nextCard: () => heldCard(workRef.current, plan.agent),
       };
       const held = root!.querySelector<HTMLElement>(
         `[data-status="doing"][data-agent="${plan.agent}"]`,
@@ -150,8 +155,7 @@ export function LiveHands() {
         // Replays start from scratch; otherwise the visit always lands.
         if (thisRun === run) {
           update((w) => settleVisit(w, plan));
-          visiting = false;
-          schedule(VISIT_MS);
+          visiting.delete(plan.agent);
         }
       }
     }
@@ -172,7 +176,7 @@ export function LiveHands() {
       window.clearTimeout(timer);
       run++;
       started = false;
-      visiting = false;
+      visiting.clear();
       lastVisit.clear();
       workRef.current = INITIAL_WORK;
       viewRef.current = "notes";

@@ -8,8 +8,17 @@ import {
   type Edge,
   type HeroPlan,
 } from "@/components/swarm/choreographies";
-import { DEFAULT_LABELS, markBuilt, rectOf, runEffect, unbuild } from "@/components/swarm/effects";
+import {
+  DEFAULT_LABELS,
+  contentRect,
+  guideOver,
+  markBuilt,
+  rectOf,
+  runEffect,
+  unbuild,
+} from "@/components/swarm/effects";
 import { BUILD_ADD_EVENT, CREW_ERRAND_EVENT, SECTION_BUILT_EVENT } from "@/components/swarm/build";
+import { freshWork, pickChore, pickPlan, type Chore } from "@/components/swarm/chores";
 import { nextArrival, restingCrew } from "@/components/swarm/roster";
 import {
   backlog,
@@ -30,16 +39,6 @@ export const HERO_SECTION = "hero";
 
 const LAST_CHOREO_KEY = "kumi-last-choreo";
 
-const IDLE_ACTIONS = [
-  "resting",
-  "stretching",
-  "waiting",
-  "pausing",
-  "tidying",
-  "checking in",
-  "looking around",
-];
-
 export type Phase = "intro" | "settled";
 
 /**
@@ -53,14 +52,21 @@ const MAX_CATCH_UP = 1.35;
 /** A new section never starts with fewer hands than this. */
 const MIN_BUILD_CREW = 3;
 
-/** How long an agent stays when nothing needs them (ms). */
-const SHIFT_MS: [number, number] = [20_000, 40_000];
-/** How long an agent lingers after a job they were called in for (ms). */
-const AFTER_JOB_MS: [number, number] = [4000, 12_000];
+/** How long an agent stays when nothing is assigned to them (ms). */
+const SHIFT_MS: [number, number] = [25_000, 45_000];
+/** How long an agent stays on after a job they were called in for (ms). */
+const AFTER_JOB_MS: [number, number] = [8000, 16_000];
 /** How often the crew looks for a fresh pair of hands (ms). */
 const ARRIVAL_MS: [number, number] = [6000, 11_000];
 
 const ENTRY_EDGES: Edge[] = ["left", "right", "bottom"];
+
+/** Finished pieces in view an agent chooses from during the intro, newest first. */
+const RECENT_WORK = 4;
+/** How often an agent looks over a working colleague's shoulder instead. */
+const PAIRING_CHANCE = 0.35;
+
+type Target = { el: Element; kind: BuildKind };
 
 type Options = {
   overlay: HTMLElement;
@@ -124,8 +130,18 @@ export class SwarmEngine {
   private phase: Phase = "intro";
   private io: IntersectionObserver | null = null;
   private maxCrew = 8;
-  /** Bumped whenever an agent stops idling, so a stale wander never moves it. */
-  private idleToken = new Map<AgentId, number>();
+  /** Bumped whenever an agent takes on work, so a stale chore never moves it. */
+  private choreToken = new Map<AgentId, number>();
+  /** The token each agent's chores are running under. */
+  private choring = new Map<AgentId, number>();
+  /** Finished work, oldest first, for agents to check. */
+  private finished: Task[] = [];
+  /** What each agent is working over, so two never share the same thing. */
+  private reviewing = new Map<AgentId, Element>();
+  /** When anyone last went over a piece of work, so it is left alone after. */
+  private checkedAt = new Map<Element, number>();
+  /** What each agent did last, so they move on to something else. */
+  private lastChore = new Map<AgentId, string>();
   /** When each agent's shift ends. */
   private shiftEnd = new Map<AgentId, number>();
   /** Agents who came in for a job and head off soon after it. */
@@ -375,7 +391,8 @@ export class SwarmEngine {
           continue;
         }
         this.status.set(task.id, "claimed");
-        this.idleToken.set(agent.id, (this.idleToken.get(agent.id) ?? 0) + 1);
+        this.stopChores(agent);
+        agent.setTool("dart");
         agent.setAction(task.label);
         const el = this.els.get(task.id)!;
         const undos: (() => void)[] = [];
@@ -423,7 +440,7 @@ export class SwarmEngine {
     return distance(from, { x: r.x, y: r.y });
   }
 
-  /** Waits for work, drifting in the margins. Resolves true if the agent left. */
+  /** Keeps busy until work comes up. Resolves true if the agent left. */
   private async idle(agent: AgentRuntime): Promise<boolean> {
     if (this.skipping && this.phase === "intro") {
       // Others may still be finishing; check back right away.
@@ -442,38 +459,157 @@ export class SwarmEngine {
         return this.leave(agent);
       }
     }
-    agent.setAction(this.rng.pick(IDLE_ACTIONS), true);
+    // Being woken only means there may be work. Chores carry on undisturbed
+    // until there actually is some.
+    this.startChores(agent);
     const woken = new Promise<void>((resolve) => this.waiters.add(resolve));
-    const token = (this.idleToken.get(agent.id) ?? 0) + 1;
-    this.idleToken.set(agent.id, token);
-    const wander = async () => {
-      await agent.sleep(this.rng.int(300, 1400));
-      if (this.idleToken.get(agent.id) !== token) return;
-      await agent.moveTo(this.idlePoint(), { speed: 0.45 });
-    };
-    wander().catch(() => {});
     const shiftLeft = Math.max(until - performance.now(), 200);
-    const linger =
-      this.phase === "settled"
-        ? Math.min(this.rng.int(5000, 11000), shiftLeft)
-        : this.rng.int(2500, 5000);
-    await Promise.race([woken, new Promise((r) => setTimeout(r, linger))]);
+    const checkBack = this.phase === "settled" ? Math.min(shiftLeft, 5000) : 2500;
+    await Promise.race([woken, new Promise((r) => setTimeout(r, checkBack))]);
     return false;
   }
 
+  private startChores(agent: AgentRuntime) {
+    const token = this.choreToken.get(agent.id) ?? 0;
+    if (this.choring.get(agent.id) === token) return;
+    this.choring.set(agent.id, token);
+    this.doChores(agent, token).catch(() => {});
+  }
+
+  private stopChores(agent: AgentRuntime) {
+    this.choreToken.set(agent.id, (this.choreToken.get(agent.id) ?? 0) + 1);
+    this.reviewing.delete(agent.id);
+  }
+
+  /** One thing after another, each given time to read as what it is. */
+  private async doChores(agent: AgentRuntime, token: number) {
+    const live = () => this.choreToken.get(agent.id) === token && !this.skipping;
+    while (live()) {
+      const partner = this.pickPartner(agent);
+      const work = this.pickWork(agent);
+      if (partner && (!work || this.rng.next() < PAIRING_CHANCE)) {
+        await this.pairWith(agent, partner, live);
+      } else if (work) {
+        await this.doWork(agent, work, live);
+      } else {
+        await this.prepare(agent, live);
+      }
+      if (live()) await agent.sleep(this.rng.int(250, 700));
+    }
+    // Skipping ended the chores, not the agent's spare time.
+    if (this.choreToken.get(agent.id) === token) this.stopChores(agent);
+  }
+
+  /** Someone on the crew in the middle of a job, in view. */
+  private pickPartner(agent: AgentRuntime) {
+    const busy = this.working().filter((a) => {
+      if (a === agent || this.choring.get(a.id) === this.choreToken.get(a.id)) return false;
+      const y = a.pos().y - window.scrollY;
+      return y > 70 && y < window.innerHeight - 60;
+    });
+    return busy.length ? this.rng.pick(busy) : null;
+  }
+
+  /** Stands by a colleague at work, ready to take the next thing off them. */
+  private async pairWith(agent: AgentRuntime, partner: AgentRuntime, live: () => boolean) {
+    agent.setAction(`pairing with ${partner.agent.name}`);
+    const near = () => {
+      const p = partner.pos();
+      return { x: p.x - 46 + this.rng.next() * 20, y: p.y + 34 + this.rng.next() * 20 };
+    };
+    await agent.moveTo(near(), { speed: 0.9 });
+    if (live()) await agent.sleep(this.rng.int(500, 900));
+    if (live()) await agent.moveTo(near(), { speed: 0.5 });
+  }
+
+  /** Finished work in view that this agent can do something useful with. */
+  private pickWork(agent: AgentRuntime): (Target & { chore: Chore }) | null {
+    const inView = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.height > 0 && r.top >= 70 && r.bottom <= window.innerHeight - 60;
+    };
+    const taken = [...this.reviewing.values()];
+    const built: Target[] = [...this.finished]
+      .reverse()
+      .filter((t) => t.kind !== "pass" && !t.errand)
+      .map((t) => ({ el: this.els.get(t.id)!, kind: t.kind }));
+    const cards: Target[] = [...document.querySelectorAll("[data-card]")].map((el) => ({
+      el,
+      kind: "box",
+    }));
+    const options = freshWork(
+      [...cards, ...built].filter((o) => !taken.includes(o.el) && inView(o.el)),
+      this.checkedAt,
+      performance.now(),
+    );
+    const last = this.lastChore.get(agent.id) ?? null;
+    const suited = options.flatMap((o) => {
+      const chore = pickChore(this.rng, agent.id, o.kind, last);
+      return chore ? [{ ...o, chore }] : [];
+    });
+    if (!suited.length) return null;
+    return this.rng.pick(this.phase === "intro" ? suited.slice(0, RECENT_WORK) : suited);
+  }
+
+  /** Goes over a piece of finished work with the agent's own tool. */
+  private async doWork(
+    agent: AgentRuntime,
+    { el, chore }: Target & { chore: Chore },
+    live: () => boolean,
+  ) {
+    const r = contentRect(el);
+    const y = r.y + Math.min(r.h * 0.5, 16);
+    this.reviewing.set(agent.id, el);
+    this.checkedAt.set(el, performance.now());
+    this.lastChore.set(agent.id, chore.label);
+    agent.setAction(chore.label);
+    await agent.moveTo({ x: r.x + Math.min(r.w * 0.1, 16), y }, { speed: 0.8 });
+    if (!live()) return;
+    agent.setTool(chore.tool);
+    if (chore.guide) guideOver(this.opts.overlay, agent.agent.color, r);
+    const end = { x: r.x + r.w * (0.55 + this.rng.next() * 0.35), y: y + r.h * 0.3 };
+    await agent.moveTo(end, { speed: 0.3, bend: 0.05 });
+    if (live()) await agent.sleep(this.rng.int(300, 700));
+    if (live()) agent.setTool("dart");
+  }
+
+  /** Nothing to do yet: get set up for the agent's next job, or plan one. */
+  private async prepare(agent: AgentRuntime, live: () => boolean) {
+    const next = this.tasks.find((t) => t.agent === agent.id && !this.status.has(t.id));
+    const el = next && this.els.get(next.id);
+    if (!el) {
+      const plan = pickPlan(this.rng, this.lastChore.get(agent.id) ?? null);
+      this.lastChore.set(agent.id, plan);
+      agent.setAction(plan);
+      await agent.moveTo(this.marginPoint(), { speed: 0.6 });
+    } else {
+      const r = rectOf(el);
+      agent.setAction("lining up next");
+      await agent.moveTo(
+        {
+          x: r.x + r.w * (0.1 + this.rng.next() * 0.3),
+          y: r.y + r.h * (0.3 + this.rng.next() * 0.4),
+        },
+        { speed: 0.6 },
+      );
+    }
+    if (live()) await agent.sleep(this.rng.int(900, 1600));
+  }
+
   /**
-   * A spare hand heads off the nearest side of the screen and leaves the crew.
+   * An agent heads off the nearest side of the screen to their next objective.
    * Resolves false if they were recalled on the way out.
    */
   private async leave(agent: AgentRuntime) {
-    this.idleToken.set(agent.id, (this.idleToken.get(agent.id) ?? 0) + 1);
+    this.stopChores(agent);
     this.leaving.add(agent);
-    agent.setAction("leaving", true);
+    agent.setTool("dart");
+    agent.setAction(this.rng.pick(agent.agent.objectives));
     const here = agent.pos();
     const toRight = here.x - window.scrollX > window.innerWidth / 2;
     await agent.moveTo(
       { x: window.scrollX + (toRight ? window.innerWidth + 60 : -60), y: here.y },
-      { speed: 0.6 },
+      { speed: 1.1 },
     );
     if (!this.leaving.has(agent)) return false;
     agent.stop();
@@ -510,7 +646,7 @@ export class SwarmEngine {
   }
 
   /** Somewhere in the margins of what the visitor is looking at. */
-  private idlePoint(): Point {
+  private marginPoint(): Point {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const left = this.rng.next() < 0.5;
@@ -530,6 +666,7 @@ export class SwarmEngine {
   /* --------------------------------------------------------- progress */
 
   private onDone(task: Task) {
+    this.finished.push(task);
     // Clear scaffolding once everything inside it is built.
     for (const [frameId, release] of this.scaffolds) {
       const frame = this.els.get(frameId)!;

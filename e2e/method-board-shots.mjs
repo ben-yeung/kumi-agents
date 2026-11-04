@@ -31,6 +31,18 @@ for (const [name, width, height, scheme] of [
   await page.waitForTimeout(800);
   await page.locator("#method").screenshot({ path: file(`${name}-method.png`) });
 
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForFunction(
+    () => document.querySelectorAll("footer [data-build]:not([data-built])").length === 0,
+    null,
+    { timeout: 120000 },
+  );
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: file(`${name}-footer.png`) });
+
   await page.evaluate(() => document.getElementById("hands").scrollIntoView());
   await page.getByRole("button", { name: "board" }).click();
   await page.waitForTimeout(500);

@@ -44,15 +44,17 @@ export function Closing() {
       <footer className={styles.footer} {...buildSection("footer")}>
         <div className={`${layout.container} ${styles.footInner}`}>
           <Wordmark />
-          <p
-            className={styles.signoff}
-            data-intent="returning a bow"
-            {...build("type", "signing off", { agent: "tao" })}
-          >
-            Made with care, by many hands.
-            <span className={styles.signed}>signed, tao</span>
-          </p>
-          <p className={styles.small}>&copy; 2026 Kumi</p>
+          <div className={styles.footCenter}>
+            <p
+              className={styles.signoff}
+              data-intent="returning a bow"
+              {...build("type", "signing off", { agent: "tao" })}
+            >
+              Made with care, by many hands.
+              <span className={styles.signed}>signed, tao</span>
+            </p>
+            <p className={styles.small}>&copy; 2026 Kumi</p>
+          </div>
         </div>
       </footer>
     </>
