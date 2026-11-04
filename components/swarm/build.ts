@@ -2,6 +2,7 @@ import type { AgentId } from "@/lib/agents";
 import type { BuildKind } from "@/components/swarm/types";
 
 export const BUILD_ADD_EVENT = "kumi:build-add";
+export const CREW_ERRAND_EVENT = "kumi:errand";
 export const SECTION_BUILT_EVENT = "kumi:section-built";
 export const SWARM_REPLAY_EVENT = "kumi:replay";
 export const WORKLOG_LIST_ID = "worklog";

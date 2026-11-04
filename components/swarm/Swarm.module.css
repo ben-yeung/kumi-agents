@@ -113,20 +113,29 @@
 /* ------------------------------------------------------------ controls */
 
 .controls,
-.crew {
+.crewAnchor {
   position: fixed;
   bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 95;
-  display: inline-flex;
-  align-items: center;
+}
+
+.controls,
+.crew,
+.crewList {
   border: 1px solid var(--line);
-  border-radius: 999px;
   background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font-family: var(--font-mono);
   font-size: var(--step--1);
   color: var(--ink-faint);
+}
+
+.controls,
+.crew {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
 }
 
 /* Two matching buttons, sized for the longest label so nothing shifts. */
@@ -166,8 +175,11 @@
   top: -0.04em;
 }
 
-.crew {
+.crewAnchor {
   left: max(var(--gutter), env(safe-area-inset-left));
+}
+
+.crew {
   gap: 0.6rem;
   height: calc(2.1em + 0.6rem + 2px);
   padding: 0 0.95rem;
@@ -183,6 +195,51 @@
   height: 0.5rem;
   border-radius: 50%;
   background: var(--c);
+}
+
+/* The padding bridges the gap, so moving up from the pill keeps the menu open. */
+.crewMenu {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  padding-bottom: 0.5rem;
+}
+
+/* Solid: backdrop blur does not reach through the wrapper's fade. */
+.crewList {
+  display: grid;
+  gap: 0.15rem;
+  width: max-content;
+  min-width: 15rem;
+  max-width: min(22rem, calc(100vw - 2 * var(--gutter)));
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.crewMember {
+  display: grid;
+  grid-template-columns: 0.55rem 3.2em minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 1.7em;
+}
+
+.crewDot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.crewName {
+  color: var(--ink);
+}
+
+.crewAction {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* Phones: the two pills share one row, so the dots give way to the count. */

@@ -9,15 +9,36 @@ import {
   type HeroPlan,
 } from "@/components/swarm/choreographies";
 import { DEFAULT_LABELS, markBuilt, rectOf, runEffect, unbuild } from "@/components/swarm/effects";
-import { BUILD_ADD_EVENT, SECTION_BUILT_EVENT } from "@/components/swarm/build";
-import { backlog, pickTask, sectionDone, type SchedulerState } from "@/components/swarm/scheduler";
-import { BUILD_KINDS, type BuildKind, type Task, type TaskStatus } from "@/components/swarm/types";
+import { BUILD_ADD_EVENT, CREW_ERRAND_EVENT, SECTION_BUILT_EVENT } from "@/components/swarm/build";
+import { nextArrival, restingCrew } from "@/components/swarm/roster";
+import {
+  backlog,
+  missingOwners,
+  pickTask,
+  sectionDone,
+  type SchedulerState,
+} from "@/components/swarm/scheduler";
+import {
+  BUILD_KINDS,
+  type BuildKind,
+  type Errand,
+  type Task,
+  type TaskStatus,
+} from "@/components/swarm/types";
 
 export const HERO_SECTION = "hero";
 
 const LAST_CHOREO_KEY = "kumi-last-choreo";
 
-const IDLE_ACTIONS = ["resting", "stretching", "waiting", "pausing", "tidying"];
+const IDLE_ACTIONS = [
+  "resting",
+  "stretching",
+  "waiting",
+  "pausing",
+  "tidying",
+  "checking in",
+  "looking around",
+];
 
 export type Phase = "intro" | "settled";
 
@@ -29,8 +50,17 @@ const TEMPO = 0.6;
 /** How much the crew may hurry when work piles up (e.g. a fast scroll). */
 const MAX_CATCH_UP = 1.35;
 
-/** Hands that stay around once everything is built. */
-const MIN_RESTING_CREW = 3;
+/** A new section never starts with fewer hands than this. */
+const MIN_BUILD_CREW = 3;
+
+/** How long an agent stays when nothing needs them (ms). */
+const SHIFT_MS: [number, number] = [20_000, 40_000];
+/** How long an agent lingers after a job they were called in for (ms). */
+const AFTER_JOB_MS: [number, number] = [4000, 12_000];
+/** How often the crew looks for a fresh pair of hands (ms). */
+const ARRIVAL_MS: [number, number] = [6000, 11_000];
+
+const ENTRY_EDGES: Edge[] = ["left", "right", "bottom"];
 
 type Options = {
   overlay: HTMLElement;
@@ -96,8 +126,13 @@ export class SwarmEngine {
   private maxCrew = 8;
   /** Bumped whenever an agent stops idling, so a stale wander never moves it. */
   private idleToken = new Map<AgentId, number>();
-  /** Consecutive idle spells per agent, used to send spare hands home. */
-  private idleSpells = new Map<AgentId, number>();
+  /** When each agent's shift ends. */
+  private shiftEnd = new Map<AgentId, number>();
+  /** Agents who came in for a job and head off soon after it. */
+  private calledIn = new Set<AgentId>();
+  /** When each agent was last on the crew, so everyone gets a turn. */
+  private lastSeen = new Map<AgentId, number>();
+  private arrivalTimer = 0;
   /** Undo work for effects in progress, run synchronously on teardown. */
   private teardowns = new Set<() => void>();
   /** Agents on their way out; still drawn, but no longer counted as crew. */
@@ -132,6 +167,7 @@ export class SwarmEngine {
     this.observeSections();
     this.activate(HERO_SECTION);
     window.addEventListener(BUILD_ADD_EVENT, this.onBuildAdd);
+    window.addEventListener(CREW_ERRAND_EVENT, this.onErrand);
     window.addEventListener("scroll", this.onScroll, { passive: true });
     inherited.forEach((runtime) => void this.run(runtime));
   }
@@ -147,7 +183,9 @@ export class SwarmEngine {
   destroy() {
     this.aborted = true;
     this.io?.disconnect();
+    window.clearTimeout(this.arrivalTimer);
     window.removeEventListener(BUILD_ADD_EVENT, this.onBuildAdd);
+    window.removeEventListener(CREW_ERRAND_EVENT, this.onErrand);
     window.removeEventListener("scroll", this.onScroll);
     this.crew.forEach((a) => a.stop());
     this.wake();
@@ -175,7 +213,7 @@ export class SwarmEngine {
     const kindAttr = el.dataset.build as BuildKind;
     const kind = BUILD_KINDS.includes(kindAttr) ? kindAttr : "reveal";
     const parentEl = el.parentElement?.closest<HTMLElement>("[data-build]");
-    const preferAttr = el.closest<HTMLElement>("[data-build-agent]")?.dataset.buildAgent;
+    const ownerAttr = el.closest<HTMLElement>("[data-build-agent]")?.dataset.buildAgent;
     const task: Task = {
       id,
       kind,
@@ -183,7 +221,7 @@ export class SwarmEngine {
       order: order ?? this.seq,
       after: (el.dataset.buildAfter ?? "").split(",").filter(Boolean),
       parent: parentEl?.dataset.buildId ?? null,
-      prefer: AGENTS.some((a) => a.id === preferAttr) ? (preferAttr as AgentId) : undefined,
+      owner: AGENTS.some((a) => a.id === ownerAttr) ? (ownerAttr as AgentId) : undefined,
       label: el.dataset.buildLabel ?? DEFAULT_LABELS[kind],
       pace: Number(el.dataset.buildPace) || undefined,
     };
@@ -197,6 +235,26 @@ export class SwarmEngine {
     const el = (e as CustomEvent<HTMLElement>).detail;
     if (!(el instanceof HTMLElement)) return;
     this.register(el, 10_000 + this.seq);
+    this.callIn();
+    this.wake();
+  };
+
+  private onErrand = (e: Event) => {
+    const { agent, label, section, el, run } = (e as CustomEvent<Errand>).detail;
+    const id = `errand-${this.seq}`;
+    this.els.set(id, el);
+    this.tasks.push({
+      id,
+      kind: "pass",
+      section,
+      order: 10_000 + this.seq++,
+      after: [],
+      parent: null,
+      owner: agent,
+      label,
+      errand: run,
+    });
+    this.callIn();
     this.wake();
   };
 
@@ -235,6 +293,7 @@ export class SwarmEngine {
     if (this.crew.some((a) => a.id === id)) return;
     const runtime = new AgentRuntime(agentById(id), this.entryPoint(edge), this.clock, this.rng);
     this.crew.push(runtime);
+    this.lastSeen.set(id, performance.now());
     this.opts.onCrew([...this.crew]);
     void this.run(runtime);
   }
@@ -257,25 +316,35 @@ export class SwarmEngine {
     }
   }
 
-  /** New sections bring new hands, favoring agents the section asked for. */
-  private grow(section: string) {
+  /** Brings in everyone whose name is on ready work. */
+  private callIn() {
+    for (const id of missingOwners(this.state())) {
+      const walkingOut = [...this.leaving].find((a) => a.id === id);
+      if (walkingOut) this.recall(walkingOut);
+      else if (this.working().length < this.maxCrew) {
+        this.calledIn.add(id);
+        this.spawn(id, this.rng.pick(ENTRY_EDGES));
+      }
+    }
+  }
+
+  /** Whoever has been away longest comes in, so every agent gets a turn. */
+  private bringFreshHands(count: number) {
+    for (let i = 0; i < count; i++) {
+      const present = this.crew.map((a) => a.id);
+      const all = this.rng.shuffle(AGENTS.map((a) => a.id));
+      const id = nextArrival(all, present, this.lastSeen);
+      if (id) this.spawn(id, this.rng.pick(ENTRY_EDGES));
+    }
+  }
+
+  /** New sections bring new hands: everyone named, or a few to share the work. */
+  private grow() {
+    const named = missingOwners(this.state()).length > 0;
+    this.callIn();
     const free = this.maxCrew - this.working().length;
-    if (free <= 0) return;
-    const wanted = new Set(
-      this.tasks
-        .filter((t) => t.section === section && t.prefer)
-        .map((t) => t.prefer!)
-        .filter((id) => !this.crew.some((a) => a.id === id)),
-    );
-    const rest = this.rng.shuffle(
-      AGENTS.map((a) => a.id).filter(
-        (id) => !wanted.has(id) && !this.crew.some((a) => a.id === id),
-      ),
-    );
-    // Everyone a section names comes at once, so each builds their own work.
-    const count = Math.min(free, Math.max(wanted.size, 1));
-    const edges: Edge[] = ["left", "right", "bottom"];
-    [...wanted, ...rest].slice(0, count).forEach((id) => this.spawn(id, this.rng.pick(edges)));
+    const short = Math.max(MIN_BUILD_CREW - this.working().length, named ? 0 : 1);
+    this.bringFreshHands(Math.max(0, Math.min(free, short)));
   }
 
   private state(): SchedulerState {
@@ -305,7 +374,6 @@ export class SwarmEngine {
           if (await this.idle(agent)) return;
           continue;
         }
-        this.idleSpells.set(agent.id, 0);
         this.status.set(task.id, "claimed");
         this.idleToken.set(agent.id, (this.idleToken.get(agent.id) ?? 0) + 1);
         agent.setAction(task.label);
@@ -313,7 +381,8 @@ export class SwarmEngine {
         const undos: (() => void)[] = [];
         try {
           await agent.sleep((task.delay ?? 0) * 1000);
-          await runEffect({
+          const work = task.errand ?? runEffect;
+          await work({
             el,
             task,
             agent,
@@ -337,6 +406,9 @@ export class SwarmEngine {
         }
         agent.setTool("dart");
         this.status.set(task.id, "done");
+        if (this.calledIn.has(agent.id)) {
+          this.shiftEnd.set(agent.id, performance.now() + this.rng.int(...AFTER_JOB_MS));
+        }
         this.onDone(task);
       }
     } catch (err) {
@@ -358,11 +430,17 @@ export class SwarmEngine {
       await new Promise((r) => setTimeout(r, 16));
       return false;
     }
-    const spells = (this.idleSpells.get(agent.id) ?? 0) + 1;
-    this.idleSpells.set(agent.id, spells);
-    if (spells > 2 && this.phase === "settled" && this.working().length > MIN_RESTING_CREW) {
-      await this.leave(agent);
-      return true;
+    const until = this.shiftEnd.get(agent.id) ?? performance.now() + this.rng.int(...SHIFT_MS);
+    this.shiftEnd.set(agent.id, until);
+    if (this.phase === "settled" && !document.hidden) {
+      const crewFull = this.working().length >= this.maxCrew;
+      const makeRoom = crewFull && missingOwners(this.state()).length > 0;
+      if (makeRoom || performance.now() >= until) {
+        // The last hands wait for a replacement to walk in.
+        const { min } = restingCrew(this.maxCrew);
+        if (!makeRoom && this.working().length <= min) this.bringFreshHands(1);
+        return this.leave(agent);
+      }
     }
     agent.setAction(this.rng.pick(IDLE_ACTIONS), true);
     const woken = new Promise<void>((resolve) => this.waiters.add(resolve));
@@ -374,12 +452,19 @@ export class SwarmEngine {
       await agent.moveTo(this.idlePoint(), { speed: 0.45 });
     };
     wander().catch(() => {});
-    const linger = this.phase === "settled" ? this.rng.int(5000, 11000) : this.rng.int(2500, 5000);
+    const shiftLeft = Math.max(until - performance.now(), 200);
+    const linger =
+      this.phase === "settled"
+        ? Math.min(this.rng.int(5000, 11000), shiftLeft)
+        : this.rng.int(2500, 5000);
     await Promise.race([woken, new Promise((r) => setTimeout(r, linger))]);
     return false;
   }
 
-  /** A spare hand heads off the nearest side of the screen and leaves the crew. */
+  /**
+   * A spare hand heads off the nearest side of the screen and leaves the crew.
+   * Resolves false if they were recalled on the way out.
+   */
   private async leave(agent: AgentRuntime) {
     this.idleToken.set(agent.id, (this.idleToken.get(agent.id) ?? 0) + 1);
     this.leaving.add(agent);
@@ -390,10 +475,38 @@ export class SwarmEngine {
       { x: window.scrollX + (toRight ? window.innerWidth + 60 : -60), y: here.y },
       { speed: 0.6 },
     );
+    if (!this.leaving.has(agent)) return false;
     agent.stop();
     this.leaving.delete(agent);
     this.crew = this.crew.filter((a) => a !== agent);
+    this.shiftEnd.delete(agent.id);
+    this.calledIn.delete(agent.id);
+    this.lastSeen.set(agent.id, performance.now());
     this.opts.onCrew([...this.crew]);
+    // Their spot may be what someone else was waiting for.
+    this.callIn();
+    return true;
+  }
+
+  /** Someone needs an agent who is on their way out: they turn back. */
+  private recall(agent: AgentRuntime) {
+    this.leaving.delete(agent);
+    this.calledIn.add(agent.id);
+    agent.stop();
+  }
+
+  /** While things are quiet, fresh hands wander in now and then. */
+  private scheduleArrival() {
+    window.clearTimeout(this.arrivalTimer);
+    this.arrivalTimer = window.setTimeout(
+      () => {
+        const { min, max } = restingCrew(this.maxCrew);
+        const short = this.rng.int(min, max) - this.working().length;
+        if (!document.hidden && backlog(this.state()) === 0 && short > 0) this.bringFreshHands(1);
+        this.scheduleArrival();
+      },
+      this.rng.int(...ARRIVAL_MS),
+    );
   }
 
   /** Somewhere in the margins of what the visitor is looking at. */
@@ -429,6 +542,7 @@ export class SwarmEngine {
       }
     }
 
+    this.callIn();
     const state = this.state();
     if (
       task.section === HERO_SECTION &&
@@ -447,6 +561,7 @@ export class SwarmEngine {
   private setPhase(phase: Phase) {
     this.phase = phase;
     this.opts.onPhase(phase);
+    if (phase === "settled") this.scheduleArrival();
   }
 
   /* --------------------------------------------------------- sections */
@@ -482,7 +597,7 @@ export class SwarmEngine {
     if (this.active.has(section)) return;
     this.active.add(section);
     this.completePasses(section);
-    if (section !== HERO_SECTION) this.grow(section);
+    if (section !== HERO_SECTION) this.grow();
     this.wake();
   }
 

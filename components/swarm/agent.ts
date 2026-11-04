@@ -49,6 +49,8 @@ export class AgentRuntime {
   };
   private listeners = new Set<() => void>();
   private moving: AnimationPlaybackControls | null = null;
+  /** Motion's stop() never settles its promise, so a stopped move is released here. */
+  private releaseMove: (() => void) | null = null;
   private nudging: [AnimationPlaybackControls | null, AnimationPlaybackControls | null] = [
     null,
     null,
@@ -116,8 +118,7 @@ export class AgentRuntime {
   /** Travel along a gentle curve. Resolves on arrival. */
   async moveTo(to: Point, opts: { speed?: number; bend?: number } = {}) {
     this.check();
-    this.stopNudges();
-    this.moving?.stop();
+    this.stop();
     const from = this.pos();
     const d = distance(from, to);
     if (this.clock.skipping() || d < 0.5) {
@@ -138,8 +139,13 @@ export class AgentRuntime {
       },
     });
     this.moving = controls;
-    await controls;
-    this.moving = null;
+    await Promise.race([
+      controls,
+      new Promise<void>((resolve) => {
+        this.releaseMove = resolve;
+      }),
+    ]);
+    if (this.moving === controls) this.moving = null;
     this.check();
   }
 
@@ -190,8 +196,12 @@ export class AgentRuntime {
     this.check();
   }
 
+  /** Halts any movement. A pending moveTo resolves where the agent stands. */
   stop() {
     this.moving?.stop();
+    this.moving = null;
+    this.releaseMove?.();
+    this.releaseMove = null;
     this.stopNudges();
   }
 }

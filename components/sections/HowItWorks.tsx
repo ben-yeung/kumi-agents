@@ -1,6 +1,7 @@
 import { agent, type AgentId } from "@/lib/agents";
 import { build, buildSection } from "@/components/swarm/build";
 import layout from "@/components/ui/layout.module.css";
+import { Strand } from "@/components/ui/Strand";
 import styles from "./HowItWorks.module.css";
 
 const STEPS: { title: string; body: string; by: AgentId; intent: string }[] = [
@@ -31,6 +32,14 @@ const STEPS: { title: string; body: string; by: AgentId; intent: string }[] = [
 ];
 
 const NUMERALS = ["i", "ii", "iii", "iv"];
+
+/** The strand under the steps, read left to right. */
+const PARTS: { label: string; by: AgentId; after: string }[] = [
+  { label: "one brief", by: "ren", after: "strand.measure" },
+  { label: "a strand for each hand", by: "ivo", after: "strand.cut" },
+  { label: "worked side by side", by: "bea", after: "strand.shape" },
+  { label: "fit back as one", by: "tao", after: "strand.fit" },
+];
 
 export function HowItWorks() {
   return (
@@ -93,6 +102,29 @@ export function HowItWorks() {
             );
           })}
         </ol>
+
+        <figure
+          className={styles.figure}
+          role="img"
+          aria-label="One stroke of ink is cut into eight colored strands, worked side by side, then drawn back into one stroke."
+          data-intent="tracing strands"
+        >
+          <Strand />
+          <ol className={styles.parts} aria-hidden="true">
+            {PARTS.map((p, i) => (
+              <li
+                key={p.label}
+                className={styles.part}
+                style={{ "--a": agent(p.by).color } as React.CSSProperties}
+                data-build-agent={p.by}
+                {...build("reveal", "labeling strand", { after: [p.after] })}
+              >
+                <span className={styles.partNumeral}>{NUMERALS[i]}</span>
+                <span className={styles.partLabel}>{p.label}</span>
+              </li>
+            ))}
+          </ol>
+        </figure>
       </div>
     </section>
   );

@@ -69,6 +69,9 @@ In the hero, the second title line is sans-serif, and "kumi" in the description 
 
 Eight notes show every agent working on their own piece at the same time: drafting a schema, writing onboarding copy, aligning screens, tightening tests, reading the docs, clearing old helpers, roughing in a page, and checking that it all fits.
 
+A switch flips the notes to a board with planned, in progress and completed columns, showing the same steps as cards.
+Agents keep coming back to move their own work along, ticking off steps on the notes or dragging cards across the board.
+
 ### 2. How it works
 
 **Heading:** Measure. Cut. Shape. Fit.
@@ -77,6 +80,9 @@ Eight notes show every agent working on their own piece at the same time: drafti
 2. **Cut.** Kumi splits the work into pieces that can move on their own.
 3. **Shape.** Each agent takes a piece, and you can watch any of them at any time.
 4. **Fit.** Every piece is tested against the others, then handed back as one.
+
+Below the steps, the method is drawn as one length of ink, brushed like the ensō.
+A single stroke is measured, cut into a strand for each hand, worked side by side, and drawn back into one stroke.
 
 ### 3. Work log
 

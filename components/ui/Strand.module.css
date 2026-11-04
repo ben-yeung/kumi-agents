@@ -1,0 +1,76 @@
+.strand {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* One brush over the whole length, so flat strokes are never clipped by a
+   filter region sized to their own thin bounds. */
+.brush {
+  filter: url(#kumi-brush);
+}
+
+.ink,
+.ghost,
+.thread,
+.tick,
+.cut {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ink {
+  stroke: var(--ink);
+  stroke-width: 11;
+  opacity: 0.88;
+}
+
+/* The same dry second pass the ensō has. */
+.ghost {
+  stroke: var(--ink);
+  stroke-width: 17;
+  opacity: 0.12;
+  transform: translate(2px, 3px);
+}
+
+.thread {
+  stroke: var(--c);
+  stroke-width: 4;
+}
+
+.tick {
+  stroke: var(--ink);
+  stroke-width: 3;
+  opacity: 0.5;
+}
+
+.cut {
+  stroke: var(--ink);
+  stroke-width: 5;
+  opacity: 0.88;
+}
+
+/* The drawing shrinks with the page; the brush should not get thinner with it. */
+@media (max-width: 34rem) {
+  .ink {
+    stroke-width: 15;
+  }
+
+  .ghost {
+    stroke-width: 23;
+  }
+
+  .thread {
+    stroke-width: 6;
+  }
+
+  .tick {
+    stroke-width: 5;
+  }
+
+  .cut {
+    stroke-width: 8;
+  }
+}

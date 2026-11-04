@@ -22,9 +22,10 @@ function hasTask(state: SchedulerState, id: string) {
 }
 
 export function canTake(task: Task, agent: AgentId, state: SchedulerState) {
-  // Assigned work falls back to anyone if its agent has left the crew.
+  // Signed work is only ever done by the agent whose name is on it.
+  if (task.owner) return task.owner === agent;
+  // Choreographed work falls back to anyone if its agent has left the crew.
   if (task.agent && state.crew.includes(task.agent)) return task.agent === agent;
-  if (task.prefer && state.crew.includes(task.prefer)) return task.prefer === agent;
   return true;
 }
 
@@ -60,6 +61,14 @@ export function pickTask(
 /** Ready work nobody has claimed yet; used to speed the crew up when behind. */
 export function backlog(state: SchedulerState) {
   return state.tasks.filter((t) => isReady(t, state)).length;
+}
+
+/** Agents with ready work who are not on the crew, soonest first. */
+export function missingOwners(state: SchedulerState): AgentId[] {
+  const ready = state.tasks.filter(
+    (t) => t.owner && !state.crew.includes(t.owner) && isReady(t, state),
+  );
+  return [...new Set(ready.sort((a, b) => a.order - b.order).map((t) => t.owner!))];
 }
 
 /** Every task in a section is done. */

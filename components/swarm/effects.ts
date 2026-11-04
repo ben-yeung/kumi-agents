@@ -68,7 +68,7 @@ export function unbuild(el: HTMLElement) {
 }
 
 /** Animates 0 to 1 over `seconds`, calling `update` each frame. Instant when skipping. */
-async function tween(
+export async function tween(
   ctx: EffectContext,
   seconds: number,
   update: (t: number) => void,
@@ -343,7 +343,7 @@ async function frameEffect(ctx: EffectContext) {
 
 /* --------------------------------------------------------------- stroke */
 
-function pointOn(path: SVGGeometryElement, length: number): Point {
+export function pointOn(path: SVGGeometryElement, length: number): Point {
   const p = path.getPointAtLength(length);
   const m = path.getScreenCTM();
   if (!m) {
@@ -352,6 +352,13 @@ function pointOn(path: SVGGeometryElement, length: number): Point {
   }
   const s = new DOMPoint(p.x, p.y).matrixTransform(m);
   return { x: s.x + window.scrollX, y: s.y + window.scrollY };
+}
+
+/** A non-scaling stroke measures its dashes on screen, not in the viewBox. */
+function dashLength(path: SVGGeometryElement) {
+  const length = path.getTotalLength();
+  if (getComputedStyle(path).vectorEffect !== "non-scaling-stroke") return length;
+  return length * Math.abs(path.getScreenCTM()?.a ?? 1);
 }
 
 async function strokeEffect(ctx: EffectContext) {
@@ -364,7 +371,7 @@ async function strokeEffect(ctx: EffectContext) {
   );
   if (!paths.length) return fadeIn(el, ctx.skipping() ? 0 : 300 / ctx.speed());
 
-  const lengths = paths.map((p) => p.getTotalLength());
+  const lengths = paths.map(dashLength);
   paths.forEach((p, i) => {
     p.style.strokeDasharray = `${lengths[i]} ${lengths[i]}`;
     p.style.strokeDashoffset = `${lengths[i]}`;
@@ -381,7 +388,7 @@ async function strokeEffect(ctx: EffectContext) {
   try {
     // Ride the last (main) path; the others are drawn alongside it.
     const lead = paths[paths.length - 1];
-    const leadLen = lengths[lengths.length - 1];
+    const leadLen = lead.getTotalLength();
     let screenLen = 0;
     let prev = pointOn(lead, 0);
     for (let i = 1; i <= 12; i++) {
