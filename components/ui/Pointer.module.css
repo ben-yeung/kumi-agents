@@ -1,0 +1,73 @@
+/* A fine ink edge keeps the pastels legible over any background. */
+.dart,
+.hand,
+.ibeam,
+.cross,
+.pencil,
+.loupe {
+  position: absolute;
+  overflow: visible;
+  transform-origin: 0 0;
+  filter: drop-shadow(0 0 0.6px color-mix(in srgb, var(--tag-ink) 60%, transparent))
+    drop-shadow(0 1px 2px color-mix(in srgb, var(--tag-ink) 26%, transparent));
+}
+
+.dart {
+  left: -0.08rem;
+  top: -0.08rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.hand {
+  left: -0.36rem;
+  top: -0.08rem;
+  width: 1.05rem;
+  height: 1.28rem;
+}
+
+/* Centered tools sit on the hotspot; size keeps them level with the dart. */
+.ibeam,
+.cross {
+  left: -0.6rem;
+  top: -0.6rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.pencil {
+  left: -0.08rem;
+  top: -0.08rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.loupe {
+  left: -0.5rem;
+  top: -0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.dart path,
+.hand path,
+.pencil path {
+  fill: var(--c);
+  stroke: var(--c);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.ibeam path,
+.cross path,
+.loupe path,
+.loupe circle {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.loupe circle {
+  fill: color-mix(in srgb, var(--c) 22%, transparent);
+}

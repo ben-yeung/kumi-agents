@@ -1,0 +1,33 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.knot {
+  width: 1.6rem;
+  height: 1.6rem;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  filter: url(#kumi-wobble);
+}
+
+.knot path:nth-child(1) {
+  stroke: var(--agent-sage);
+}
+
+.knot path:nth-child(2) {
+  stroke: var(--agent-clay);
+}
+
+.word {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 420;
+  letter-spacing: -0.01em;
+  font-variation-settings: "SOFT" 100;
+  line-height: 1;
+  padding-bottom: 0.08em;
+}

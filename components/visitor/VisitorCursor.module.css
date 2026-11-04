@@ -1,0 +1,44 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-soft);
+}
+
+.layer[data-visible="true"] {
+  opacity: 1;
+}
+
+.tip,
+.tagAnchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Dart and hand are stacked; `scale` swaps them and `transform` is the press. */
+.tip > svg {
+  transition:
+    transform 140ms var(--ease-soft),
+    scale 160ms var(--ease-soft),
+    opacity 120ms var(--ease-soft);
+}
+
+.tip > svg:last-child,
+.tip[data-clickable="true"] > svg:first-child {
+  opacity: 0;
+  scale: 0.7;
+}
+
+.tip[data-clickable="true"] > svg:last-child {
+  opacity: 1;
+  scale: 1;
+}
+
+.tip[data-pressed="true"] > svg {
+  transform: scale(0.86);
+}

@@ -1,0 +1,62 @@
+/* The tag is anchored at the pointer tip and offset with a transform, so
+   flipping sides can slide. Its width is re-measured on every typed
+   character and eases over roughly one keystroke, so it tracks the text. */
+.tag {
+  --tx: 1.05rem;
+  --ty: 1.2rem;
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: content-box;
+  width: var(--w, auto);
+  overflow: hidden;
+  padding: 0.2em 0.65em 0.25em;
+  border-radius: 999px;
+  background: var(--c);
+  color: var(--tag-ink);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  line-height: 1.3;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--tag-ink) 12%, transparent);
+  transform: translate(var(--tx), var(--ty));
+}
+
+.tag[data-animate="true"] {
+  transition:
+    width 70ms cubic-bezier(0.2, 0.6, 0.3, 1),
+    background-color 300ms ease;
+}
+
+/* The slide only runs while flipping, so width changes never drag the tag
+   away from the pointer. */
+.tag[data-flipping="true"] {
+  transition:
+    width 70ms cubic-bezier(0.2, 0.6, 0.3, 1),
+    transform 520ms cubic-bezier(0.33, 0, 0.2, 1),
+    background-color 300ms ease;
+}
+
+/* Natural-width content that the pill measures and eases toward. */
+.inner {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.sep {
+  opacity: 0.6;
+}
+
+/* Keep the tag on screen near the right and bottom edges. */
+.tag[data-flip-x="true"] {
+  --tx: calc(-100% - 0.6rem);
+}
+
+.tag[data-flip-y="true"] {
+  --ty: calc(-100% - 0.6rem);
+}

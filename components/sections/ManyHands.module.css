@@ -1,0 +1,120 @@
+.section {
+  padding-block: var(--section-gap);
+}
+
+.layout {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.intro {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 44rem;
+}
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: clamp(1rem, 1.6vw, 1.75rem);
+}
+
+.lane {
+  --box-fill: color-mix(in srgb, var(--paper-raised) 70%, transparent);
+  --box-line: var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.25rem 1.25rem 1.1rem;
+}
+
+.lane:hover {
+  --box-line: var(--a);
+}
+
+.laneHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+}
+
+.laneName {
+  font-weight: 500;
+}
+
+.lanePct {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.strand {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 400;
+  line-height: 1.25;
+  font-variation-settings: "SOFT" 50;
+}
+
+.steps {
+  display: grid;
+  gap: 0.35rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.step[data-done="true"] svg {
+  stroke: var(--a);
+  stroke-width: 2;
+}
+
+.step[data-done="true"] span:first-of-type {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--ink-faint) 50%, transparent);
+}
+
+.thread {
+  display: block;
+  width: 100%;
+  height: 0.75rem;
+  margin-top: auto;
+  overflow: visible;
+}
+
+.threadBase,
+.threadDone {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.threadBase {
+  stroke: var(--line);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 5;
+}
+
+.threadDone {
+  stroke: var(--a);
+  stroke-width: 2.5;
+}

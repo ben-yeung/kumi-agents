@@ -1,0 +1,69 @@
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.75em 1.4em 0.8em;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  transition:
+    transform 240ms var(--ease-soft),
+    background-color 240ms var(--ease-soft);
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--ink) 88%, var(--paper));
+}
+
+.primary svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 240ms var(--ease-soft);
+}
+
+.primary:hover svg {
+  transform: translateX(3px);
+}
+
+/* Quiet text link with a brushed underline. */
+.secondary {
+  position: relative;
+  padding: 0.75em 0.2em 0.8em;
+  color: var(--ink-soft);
+  font-style: italic;
+  transition: color 200ms var(--ease-soft);
+}
+
+.secondary::after {
+  content: "";
+  position: absolute;
+  left: 0.2em;
+  right: 0.2em;
+  bottom: 0.55em;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+  filter: url(#kumi-wobble);
+  transform-origin: left;
+  transition:
+    opacity 200ms var(--ease-soft),
+    transform 300ms var(--ease-soft);
+}
+
+.secondary:hover {
+  color: var(--ink);
+}
+
+.secondary:hover::after {
+  opacity: 1;
+}

@@ -1,0 +1,156 @@
+/* Document-sized layer: children are placed in page coordinates and clipped
+   so nothing an agent does can widen or lengthen the page. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  overflow: clip;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ agents */
+
+.agent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transition: opacity 600ms var(--ease-soft);
+}
+
+.agent[data-idle="true"] {
+  opacity: 0.72;
+}
+
+@media (max-width: 40rem) {
+  .agent[data-idle="true"] {
+    opacity: 0.4;
+  }
+}
+
+.press {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 120ms var(--ease-soft);
+}
+
+.agent[data-pressed="true"] .press {
+  transform: scale(0.84);
+}
+
+/* Each tool change is a quick pop, keyed by the tool in the markup. */
+.press > svg {
+  animation: tool-in 180ms var(--ease-soft);
+}
+
+@keyframes tool-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------ effects */
+
+.caret {
+  position: absolute;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--c);
+  animation: blink 900ms steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.outline,
+.frame,
+.marquee {
+  position: absolute;
+  border-radius: var(--radius);
+}
+
+.outline {
+  border: 1.5px dashed var(--c);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+}
+
+.frame {
+  border: 1.25px dashed color-mix(in srgb, var(--c) 85%, transparent);
+  border-radius: calc(var(--radius) * 1.5);
+}
+
+.frame::before {
+  /* Corner ticks, like a layout scaffold. */
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 8px 1.5px,
+    linear-gradient(var(--c), var(--c)) top left / 1.5px 8px,
+    linear-gradient(var(--c), var(--c)) bottom right / 8px 1.5px,
+    linear-gradient(var(--c), var(--c)) bottom right / 1.5px 8px;
+  background-repeat: no-repeat;
+}
+
+.marquee {
+  border: 1px dotted var(--c);
+  background: color-mix(in srgb, var(--c) 10%, transparent);
+  border-radius: 3px;
+}
+
+.glow {
+  position: absolute;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+}
+
+/* ------------------------------------------------------------ controls */
+
+.controls {
+  position: fixed;
+  right: max(var(--gutter), env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 95;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+.crewDots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.crewDots span {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.controlButton {
+  padding: 0.3em 0.8em;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--paper-raised);
+  transition: background-color 200ms var(--ease-soft);
+}
+
+.controlButton:hover {
+  background: var(--paper-sunk);
+}

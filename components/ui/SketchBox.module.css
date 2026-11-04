@@ -1,0 +1,20 @@
+/* A box whose border is drawn with a slight hand wobble. The border lives
+   on a pseudo-element so the filter never touches the content. */
+.box {
+  position: relative;
+  isolation: isolate;
+}
+
+.box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid var(--box-line, var(--line-strong));
+  border-radius: var(--radius);
+  background: var(--box-fill, transparent);
+  filter: url(#kumi-wobble);
+  transition:
+    border-color 300ms var(--ease-soft),
+    background-color 300ms var(--ease-soft);
+}

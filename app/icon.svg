@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The Wordmark knot on a paper tile, drawn heavier so it holds at tab size. -->
+  <style>
+    .paper { fill: #f3efe7; }
+    .strand { fill: none; stroke-width: 3; stroke-linecap: round; }
+    .sage { stroke: #95b58e; }
+    .clay { stroke: #ce9e89; }
+    .ink { stroke: #2b2722; }
+    @media (prefers-color-scheme: dark) {
+      .paper { fill: #1b1a17; }
+      .sage { stroke: #a7c5a0; }
+      .clay { stroke: #dcaf9b; }
+      .ink { stroke: #e7e1d5; }
+    }
+  </style>
+  <rect class="paper" width="32" height="32" rx="7" />
+  <path class="strand sage" d="M5 9c7 1 14 13 22 14" />
+  <path class="strand clay" d="M5 23c8-1 13-13 22-14" />
+  <path class="strand ink" d="M4.5 16.2c7.6-.6 15.4.5 23 0" />
+</svg>

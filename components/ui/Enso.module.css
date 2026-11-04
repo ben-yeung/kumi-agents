@@ -1,0 +1,27 @@
+.enso {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.stroke,
+.ghost {
+  fill: none;
+  stroke: var(--ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: url(#kumi-brush);
+}
+
+.stroke {
+  stroke-width: 11;
+  opacity: 0.88;
+}
+
+/* A dry, offset second pass gives the stroke its uneven body. */
+.ghost {
+  stroke-width: 17;
+  opacity: 0.12;
+  transform: translate(2px, 3px);
+}
