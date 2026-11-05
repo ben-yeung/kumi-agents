@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/icon.svg" alt="Kumi logo" width="96" height="96">
+</p>
+
 # Kumi landing page
 
 A landing page for Kumi, a fictional agentic startup built around parallel agent work.
