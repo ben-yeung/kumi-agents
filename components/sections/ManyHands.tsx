@@ -1,5 +1,6 @@
 import { LiveHands } from "@/components/sections/LiveHands";
 import { build, buildSection } from "@/components/swarm/build";
+import { GOAL } from "@/lib/lanes";
 import layout from "@/components/ui/layout.module.css";
 import styles from "./ManyHands.module.css";
 
@@ -32,6 +33,13 @@ export function ManyHands() {
             <p>Give Kumi a goal and every agent takes a piece.</p>
             <p>Watch the work happen instead of staring at a loading spinner.</p>
           </div>
+          <p
+            className={styles.goal}
+            data-intent="reading the goal"
+            {...build("type", "stating the goal")}
+          >
+            the goal: <span>{GOAL}</span>
+          </p>
         </header>
 
         <LiveHands />

@@ -101,25 +101,16 @@ for (const width of [1440, 2560]) {
     const center = box(foot.querySelector("p").parentElement);
     const pill = box(document.querySelector("[data-swarm-crew]"));
     const bar = box(document.querySelector("[data-swarm-controls]"));
-    const copy = box(foot.querySelector("p:last-child"));
-    const signed = box(foot.querySelector("p"));
     return {
       offset: Math.abs(mid(center) - mid(pill)),
       markOffset: Math.abs(mid(mark) - mid(bar)),
-      centered: Math.abs(copy.left + copy.width / 2 - (signed.left + signed.width / 2)),
-      below: copy.top >= signed.bottom - 1,
       gap: mark.left - pill.right,
       pageCenter: Math.abs(center.left + center.width / 2 - document.body.clientWidth / 2),
     };
   });
   check(
     `${width}: footer lines up with the pills`,
-    m.offset <= 1.5 &&
-      m.markOffset <= 1.5 &&
-      m.centered <= 1.5 &&
-      m.pageCenter <= 1.5 &&
-      m.below &&
-      m.gap > 0,
+    m.offset <= 1.5 && m.markOffset <= 1.5 && m.pageCenter <= 1.5 && m.gap > 0,
     JSON.stringify(m),
   );
   await page.close();

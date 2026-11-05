@@ -9,9 +9,7 @@ import {
 } from "@/components/swarm/build";
 import { LogEntryRow } from "@/components/sections/LogEntryRow";
 import { createRng, randomSeed } from "@/lib/rng";
-import { WORKLOG, nextLogEntry, type LogEntry } from "@/lib/worklog";
-
-const MAX_LIVE = 6;
+import { LIVE_NOTES, WORKLOG, nextLogEntry, type LogEntry } from "@/lib/worklog";
 
 /**
  * Keeps the work log growing: once the crew has written the seed entries,
@@ -34,13 +32,14 @@ export function LiveLog() {
 
     const schedule = () => {
       window.clearTimeout(timer);
-      if (count >= MAX_LIVE) return;
+      if (count >= LIVE_NOTES.length) return;
       timer = window.setTimeout(add, rng.int(3200, 6500));
     };
 
     function add() {
       if (!inView || document.hidden) return schedule();
       const entry = nextLogEntry(rng, history);
+      if (!entry) return;
       history.push(entry);
       count++;
       setEntries((prev) => [...prev, entry]);
