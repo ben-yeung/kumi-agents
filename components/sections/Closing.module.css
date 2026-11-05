@@ -67,10 +67,11 @@
   );
 }
 
+/* One line, so nothing hangs below the pills' band into the page's bottom edge. */
 .footCenter {
-  display: grid;
-  justify-items: center;
-  gap: 0.15rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
 }
 
 .signoff {
@@ -106,7 +107,13 @@
 }
 
 /* No room beside the pills: the footer stacks, centered, above them. */
-@media (max-width: 70rem) {
+@media (max-width: 84rem) {
+  .footCenter {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
   .footInner {
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;

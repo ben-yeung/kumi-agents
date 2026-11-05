@@ -189,3 +189,9 @@ ul {
 html[data-swarm] [data-build]:not([data-built]):not([data-building]) {
   opacity: 0;
 }
+
+/* A thin ink line on the paper, in both themes. */
+html {
+  scrollbar-color: var(--line-strong) var(--paper);
+  scrollbar-width: thin;
+}
