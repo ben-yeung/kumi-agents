@@ -144,6 +144,8 @@ export class SwarmEngine {
   private checked = new Set<Element>();
   /** Chores done so far in each section. */
   private choresIn = new Map<string, number>();
+  /** Agents partway through a chore, who finish it before they leave. */
+  private midChore = new Set<AgentId>();
   /** What each agent did last, so they move on to something else. */
   private lastChore = new Map<AgentId, string>();
   /** When each agent's shift ends. */
@@ -507,7 +509,8 @@ export class SwarmEngine {
     if (this.phase === "settled" && !document.hidden) {
       const crewFull = this.working().length >= this.maxCrew;
       const makeRoom = crewFull && missingOwners(this.state()).length > 0;
-      if (makeRoom || performance.now() >= until) {
+      const shiftOver = performance.now() >= until && !this.midChore.has(agent.id);
+      if (makeRoom || shiftOver) {
         // The last hands wait for a replacement to walk in.
         const { min } = restingCrew(this.maxCrew);
         if (!makeRoom && this.working().length <= min) this.bringFreshHands(1);
@@ -639,18 +642,23 @@ export class SwarmEngine {
   ) {
     const r = contentRect(el);
     const y = r.y + Math.min(r.h * 0.5, 16);
+    this.midChore.add(agent.id);
     this.checked.add(group);
     this.choresIn.set(section, (this.choresIn.get(section) ?? 0) + 1);
     this.lastChore.set(agent.id, chore.label);
     agent.setAction(chore.label);
     await agent.moveTo({ x: r.x + Math.min(r.w * 0.1, 16), y }, { speed: 0.8 });
-    if (!live()) return;
+    if (!live()) {
+      this.midChore.delete(agent.id);
+      return;
+    }
     agent.setTool(chore.tool);
     if (chore.guide) guideOver(this.opts.overlay, agent.agent.color, r);
     const end = { x: r.x + r.w * (0.55 + this.rng.next() * 0.35), y: y + r.h * 0.3 };
     await agent.moveTo(end, { speed: 0.3, bend: 0.05 });
     if (live()) await agent.sleep(this.rng.int(300, 700));
     if (live()) agent.setTool("dart");
+    this.midChore.delete(agent.id);
   }
 
   /** Nothing to do nearby: work out what is next. */

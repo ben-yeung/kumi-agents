@@ -15,7 +15,7 @@ const STABLE_SAMPLES = 4;
 const LIMITS = { stillSeconds: 4.5, shortestLabelSeconds: 1.2, edgeSeconds: 1.2 };
 const VIEWPORT = { width: 1440, height: 900 };
 /** Closer to the side of the screen than this, only a name tag shows. */
-const EDGE = 48;
+const EDGE = 40;
 const PASSIVE = /\b(rest|paus|wait|leav|stretch|tidy|pairing)/;
 
 const browser = await chromium.launch();
@@ -123,7 +123,8 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   // Real build steps can be quick; it is what agents do between them that must not flit.
   const tasks = new Set([...mine.flatMap((r) => r.tasks), "hmm, no"]);
   const middle = labels.flatMap((list) => list.slice(1, -1)).filter((r) => !tasks.has(r.action));
-  const shortest = Math.min(...middle.map((r) => (r.end - r.start) / 1000));
+  const quickest = middle.reduce((q, r) => (!q || r.end - r.start < q.end - q.start ? r : q), null);
+  const shortest = quickest ? (quickest.end - quickest.start) / 1000 : Infinity;
   const seconds = agents.reduce((sum, list) => sum + list.length * (SAMPLE_MS / 1000), 0);
   const final = words.filter(whole);
   // While the hero is going up, tags only ever name real build work.
@@ -137,7 +138,7 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   console.log(`\n${name} (${mine.length} loads)`);
   console.log(`  longest stood still ${still.toFixed(1)}s`);
   console.log(`  longest at the edge ${edge.toFixed(1)}s`);
-  console.log(`  shortest chore      ${shortest.toFixed(1)}s`);
+  console.log(`  shortest chore      ${shortest.toFixed(1)}s "${quickest?.action ?? ""}"`);
   console.log(
     `  label changes       ${((labels.flat().length / seconds) * 60).toFixed(0)} per agent-minute`,
   );

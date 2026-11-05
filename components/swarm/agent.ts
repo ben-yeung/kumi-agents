@@ -31,6 +31,8 @@ export type Clock = {
 };
 
 const EASE_HAND: [number, number, number, number] = [0.42, 0.02, 0.2, 1];
+/** An agent's first move: already in motion as they come into frame. */
+const EASE_ENTER: [number, number, number, number] = [0.16, 0.6, 0.3, 1];
 
 /**
  * One agent on the crew: position (document coordinates), a curved,
@@ -47,6 +49,7 @@ export class AgentRuntime {
   };
   private listeners = new Set<() => void>();
   private moving: AnimationPlaybackControls | null = null;
+  private entered = false;
   /** Motion's stop() never settles its promise, so a stopped move is released here. */
   private releaseMove: (() => void) | null = null;
   private nudging: [AnimationPlaybackControls | null, AnimationPlaybackControls | null] = [
@@ -126,10 +129,12 @@ export class AgentRuntime {
     }
     const bend = opts.bend ?? (this.rng.next() - 0.5) * 0.5;
     const c = curveControl(from, to, bend);
-    const duration = travelSeconds(d, (opts.speed ?? 1) * this.clock.speed());
+    // Nobody saunters on: coming into frame is always at full pace.
+    const pace = this.entered ? (opts.speed ?? 1) : Math.max(opts.speed ?? 1, 1);
+    const duration = travelSeconds(d, pace * this.clock.speed());
     const controls = animate(0, 1, {
       duration,
-      ease: EASE_HAND,
+      ease: this.entered ? EASE_HAND : EASE_ENTER,
       onUpdate: (t) => {
         const p = quadPoint(from, c, to, t);
         this.x.set(p.x);
@@ -137,6 +142,7 @@ export class AgentRuntime {
       },
     });
     this.moving = controls;
+    this.entered = true;
     await Promise.race([
       controls,
       new Promise<void>((resolve) => {
