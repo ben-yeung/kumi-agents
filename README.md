@@ -65,19 +65,20 @@ The overall pace is one constant, `TEMPO` in `engine.ts`.
 Visitors who prefer reduced motion get the finished page with no cursors.
 If the scripts never run, content is released after a few seconds, so it always shows.
 
-## End-to-end scripts
+## End-to-end tests
 
-These drive a running server with Playwright.
+These run in a real browser with Playwright Test, against a production build on a free port.
 Run `npx playwright install chromium` once first.
 
 ```bash
-node e2e/behaviors.mjs http://localhost:3000       # behavior checks
-node e2e/crew.mjs http://localhost:3000            # authorship, rotation, notes, board, footer
-node e2e/board.mjs http://localhost:3000           # cards finish at 100%, agents add tasks, replay
-node e2e/landing.mjs http://localhost:3000         # opening mid-page builds what is in view first
-node e2e/intro-idle.mjs http://localhost:3000 --strict  # nobody stands still or says anything passive
-node e2e/screenshots.mjs http://localhost:3000     # mobile, laptop, 4K, both themes
-node e2e/intro-frames.mjs http://localhost:3000    # frames of the intro and scroll build
+npm run e2e                             # behavior checks, about three minutes
+npm run e2e -- e2e/board.spec.ts        # one file
+npm run e2e -- -g "footer"              # tests matching a name
+npm run e2e:shots                       # every size, both themes, intro to finished page
+node e2e/intro-frames.mjs http://localhost:3000  # frames of the intro and scroll build
 ```
+
+Set `E2E_BASE_URL` to test a server that is already running instead of building one.
+There are no retries, because a retry would hide the timing problems these tests exist to catch.
 
 Screenshots go to `e2e/.shots/`, which is ignored by git.
