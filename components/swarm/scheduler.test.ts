@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  LIVE_ORDER,
   backlog,
   isReady,
   missingOwners,
   pickTask,
+  sectionBuilding,
   sectionDone,
   type SchedulerState,
 } from "./scheduler";
@@ -70,6 +72,15 @@ describe("scheduler", () => {
     expect(missingOwners(state(tasks, { taken: "claimed" }))).toEqual(["mika", "tao"]);
   });
 
+  it("knows when a section is still being built, ignoring later live work", () => {
+    const tasks = [task("a"), task("later", { section: "other" })];
+    expect(sectionBuilding(state(tasks))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "claimed" }))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "done" }))).toBe(false);
+    const live = [task("a"), task("note", { order: LIVE_ORDER })];
+    expect(sectionBuilding(state(live, { a: "done" }))).toBe(false);
+  });
+
   it("takes the lowest order, then the nearest", () => {
     const tasks = [
       task("far", { order: 1 }),
@@ -79,6 +90,14 @@ describe("scheduler", () => {
     const dist = (t: Task) => (t.id === "near" ? 10 : 100);
     expect(pickTask("ren", state(tasks), dist)?.id).toBe("near");
     expect(pickTask("ren", state([tasks[2], tasks[0]]), dist)?.id).toBe("far");
+  });
+
+  it("puts work the visitor is looking at first", () => {
+    const tasks = [task("above", { order: 1 }), task("here", { section: "seen", order: 2 })];
+    const active = new Set(["s", "seen"]);
+    const s = state(tasks, {}, { activeSections: active, focus: new Set(["seen"]) });
+    expect(pickTask("ren", s)?.id).toBe("here");
+    expect(pickTask("ren", state([tasks[0]], {}, { focus: new Set(["seen"]) }))?.id).toBe("above");
   });
 
   it("skips claimed and done work", () => {

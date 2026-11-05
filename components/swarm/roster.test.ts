@@ -21,7 +21,7 @@ describe("roster", () => {
   });
 
   it("rests a smaller crew on phones", () => {
-    expect(restingCrew(8)).toEqual({ min: 2, max: 4 });
-    expect(restingCrew(4)).toEqual({ min: 1, max: 3 });
+    expect(restingCrew(8)).toEqual({ min: 1, max: 3 });
+    expect(restingCrew(4)).toEqual({ min: 1, max: 2 });
   });
 });

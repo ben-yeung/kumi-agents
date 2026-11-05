@@ -4,7 +4,7 @@
 
 .layout {
   display: grid;
-  gap: clamp(2.5rem, 5vw, 4.5rem);
+  gap: clamp(1.25rem, 2.5vw, 2rem);
 }
 
 .intro {
@@ -18,8 +18,9 @@
 }
 
 .live {
+  position: relative;
   display: grid;
-  gap: 1.25rem;
+  gap: 0.9rem;
 }
 
 /* Sits above the work, and cannot be pressed before it has been placed. */
@@ -269,6 +270,16 @@
 
 .card .rule {
   margin-top: 0.25rem;
+}
+
+/* With room to spare the switch sits level with the description, so it adds no
+   row of its own between the words and the work. */
+@media (min-width: 75rem) {
+  .viewToggle {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + clamp(1.25rem, 2.5vw, 2rem));
+  }
 }
 
 /* Eight notes: two rows of four, then four rows of two, then one column. */

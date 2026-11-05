@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/lib/rng";
 import { AGENTS } from "@/lib/agents";
-import { CHORES, PLANS, RECHECK_MS, freshWork, pickChore, pickPlan } from "./chores";
+import { CHORES, CHORES_PER_SECTION, PLANS, freshWork, pickChore, pickPlan } from "./chores";
 
 const every = [
   ...Object.values(CHORES)
@@ -13,7 +13,8 @@ const every = [
 describe("chores", () => {
   it("gives every agent their own work to do, in active words", () => {
     expect(new Set(every).size).toBe(every.length);
-    for (const label of every) expect(label).not.toMatch(/rest|paus|wait|leav|stretch|tidy/);
+    for (const label of every)
+      expect(label).not.toMatch(/rest|paus|wait|leav|stretch|tidy|pairing/);
     for (const a of AGENTS) expect(CHORES[a.id].length).toBeGreaterThan(1);
   });
 
@@ -49,11 +50,17 @@ describe("chores", () => {
     }
   });
 
-  it("leaves work alone once anyone has been over it", () => {
-    const a = { el: "a" };
-    const b = { el: "b" };
-    const checked = new Map([["a", 1000]]);
-    expect(freshWork([a, b], checked, 2000)).toEqual([b]);
-    expect(freshWork([a, b], checked, 1000 + RECHECK_MS)).toEqual([a, b]);
+  it("gives each piece one pass, whichever part of it was looked at", () => {
+    const title = { group: "note", section: "s" };
+    const rule = { group: "note", section: "s" };
+    const other = { group: "row", section: "s" };
+    expect(freshWork([title, rule, other], new Set(["note"]), new Map())).toEqual([other]);
+  });
+
+  it("stops at a few chores per section", () => {
+    const a = { group: "a", section: "s" };
+    const b = { group: "b", section: "t" };
+    const done = new Map([["s", CHORES_PER_SECTION]]);
+    expect(freshWork([a, b], new Set(), done)).toEqual([b]);
   });
 });

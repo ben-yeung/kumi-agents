@@ -37,7 +37,7 @@ type View = "notes" | "board";
 
 const SECTION = "hands";
 const FIRST_VISIT_MS: [number, number] = [1200, 2600];
-const VISIT_MS: [number, number] = [2500, 5000];
+const VISIT_MS: [number, number] = [4000, 8000];
 /** Agents working on their own notes at the same moment. */
 const MAX_VISITS = 2;
 /** The foot of a column fades out; cards under it are not worked on. */

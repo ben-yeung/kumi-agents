@@ -2,7 +2,7 @@ import type { AgentId } from "@/lib/agents";
 
 /** How many hands stay around while nothing needs building. */
 export function restingCrew(maxCrew: number) {
-  return maxCrew > 4 ? { min: 2, max: 4 } : { min: 1, max: 3 };
+  return maxCrew > 4 ? { min: 1, max: 3 } : { min: 1, max: 2 };
 }
 
 /**
