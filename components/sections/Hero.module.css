@@ -116,15 +116,32 @@
   gap: 0.45em;
 }
 
+/* Too narrow for two columns: the ensō leaves the flow and becomes a faint
+   wash bleeding off the right edge, so the copy gets the whole screen. */
 @media (max-width: 52rem) {
+  .hero {
+    isolation: isolate;
+    overflow-x: clip;
+  }
+
   .grid {
+    flex: 1;
     grid-template-columns: 1fr;
   }
 
   .art {
-    order: -1;
-    width: min(60%, 16rem);
-    justify-self: start;
+    --enso-size: min(120vw, 36rem);
+    position: absolute;
+    top: 44%;
+    right: calc(var(--enso-size) * -0.35);
+    z-index: -1;
+    width: var(--enso-size);
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .enso {
+    opacity: 0.14;
   }
 
   .caption {

@@ -34,10 +34,11 @@ export function Nav() {
           <a
             href="#waitlist"
             className={styles.join}
+            aria-label="Join the waitlist"
             data-intent="tempted"
             data-intent-press="diving in"
           >
-            Join the waitlist
+            Join<span className={styles.joinRest}> the waitlist</span>
           </a>
         </div>
       </nav>
