@@ -15,8 +15,8 @@ export const WORKLOG: readonly LogEntry[] = [
   {
     id: "w3",
     time: "13:14",
-    agent: "ren",
-    text: "wrote the billing migration, plans and seats first",
+    agent: "oki",
+    text: "listed everything still using the old invoices",
   },
   { id: "w4", time: "13:21", agent: "bea", text: "wired checkout to ren's new schema" },
   {

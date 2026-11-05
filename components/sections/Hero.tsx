@@ -16,13 +16,6 @@ export function Hero() {
     >
       <div className={`${layout.container} ${styles.grid}`}>
         <div className={styles.copy} {...build("frame", "scaffolding", { id: "hero.copy" })}>
-          <p
-            className={layout.kicker}
-            data-intent="squinting"
-            {...build("type", "noting premise", { id: "hero.kicker" })}
-          >
-            parallel agents, handled with care
-          </p>
           <h1
             id="hero-title"
             className={styles.title}

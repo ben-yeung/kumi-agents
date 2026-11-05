@@ -3,6 +3,14 @@ import { LANES } from "@/lib/lanes";
 import { createRng } from "@/lib/rng";
 import { LIVE_NOTES, WORKLOG, nextLogEntry, type LogEntry } from "@/lib/worklog";
 
+describe("WORKLOG", () => {
+  it("has one seed row per agent, so no hover reaction repeats", () => {
+    const agents = WORKLOG.map((e) => e.agent);
+    expect(new Set(agents).size).toBe(LANES.length);
+    expect(agents).toHaveLength(LANES.length);
+  });
+});
+
 describe("nextLogEntry", () => {
   it("moves time forward, changes hands, and never repeats a line", () => {
     const rng = createRng(3);

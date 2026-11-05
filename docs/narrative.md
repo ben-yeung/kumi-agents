@@ -42,8 +42,6 @@ In the hero, the second title line is sans-serif, and "kumi" in the description 
 
 ## Hero
 
-**Kicker:** parallel agents, handled with care
-
 **Headline:** Many hands. One clean fit.
 
 **Subcopy:**
