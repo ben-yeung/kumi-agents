@@ -9,7 +9,6 @@ export const HERO_IDS = [
   "nav.links",
   "nav.controls",
   "hero.copy",
-  "hero.kicker",
   "hero.title",
   "hero.lede",
   "hero.cta",
@@ -54,7 +53,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
     entry: ["left", "right", "bottom", "top"],
     pass: ["hero.copy"],
     lanes: [
-      [{ id: "hero.title", rewrite: true }, { id: "hero.kicker" }],
+      [{ id: "hero.title", rewrite: true }],
       [{ id: "hero.enso", delay: 0.15 }, { id: "hero.caption" }, { id: "hero.crew" }],
       [{ id: "hero.lede", delay: 0.5, pace: 1.6 }, { id: "hero.cta" }, { id: "hero.watch" }],
       [{ id: "nav.joint" }, { id: "nav.word" }, { id: "nav.links" }, { id: "nav.controls" }],
@@ -69,12 +68,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
         { id: "hero.copy", kind: "frame" },
         { id: "hero.title", rewrite: true },
       ],
-      [
-        { id: "hero.kicker", delay: 0.1 },
-        { id: "nav.joint" },
-        { id: "nav.word" },
-        { id: "nav.links" },
-      ],
+      [{ id: "nav.joint", delay: 0.1 }, { id: "nav.word" }, { id: "nav.links" }],
       [{ id: "hero.lede", delay: 0.2, pace: 1.6 }],
       [{ id: "hero.enso" }, { id: "hero.caption" }, { id: "nav.controls" }],
       [{ id: "hero.cta", delay: 0.3 }, { id: "hero.watch" }, { id: "hero.crew" }],
@@ -87,7 +81,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
     stagger: [0, 0.15, 0.3, 0.45, 0.6],
     pass: ["hero.copy"],
     lanes: [
-      [{ id: "hero.title" }, { id: "hero.kicker" }],
+      [{ id: "hero.title" }],
       [{ id: "nav.joint" }, { id: "nav.word" }, { id: "nav.links" }],
       [{ id: "hero.lede", kind: "develop" }, { id: "hero.cta" }, { id: "hero.watch" }],
       [{ id: "hero.enso" }, { id: "hero.caption" }],
@@ -106,7 +100,7 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
         { id: "hero.cta" },
         { id: "hero.watch" },
       ],
-      [{ id: "hero.enso" }, { id: "hero.caption" }, { id: "hero.kicker" }],
+      [{ id: "hero.enso" }, { id: "hero.caption" }],
       [
         { id: "nav.joint", delay: 0.3 },
         { id: "nav.word" },

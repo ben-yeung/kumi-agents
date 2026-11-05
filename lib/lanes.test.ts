@@ -15,10 +15,25 @@ import {
 } from "@/lib/lanes";
 import { createRng } from "@/lib/rng";
 
-const ren = LANES[0];
-const sol = LANES[1];
+const ren = LANES.find((l) => l.agent === "ren")!;
+const sol = LANES.find((l) => l.agent === "sol")!;
 
 describe("lanes", () => {
+  it("runs in workflow order, the earliest pieces furthest along, tao last", () => {
+    const progress = LANES.map((l) => l.progress);
+    expect(progress).toEqual([...progress].sort((a, b) => b - a));
+    expect(new Set(progress).size).toBe(progress.length);
+    expect(LANES[LANES.length - 1].agent).toBe("tao");
+  });
+
+  it("starts every lane with progress that agrees with its ticks", () => {
+    for (const lane of LANES) {
+      const done = lane.steps.filter((s) => s.done).length;
+      expect(lane.progress).toBeGreaterThanOrEqual(done / lane.steps.length);
+      expect(lane.progress).toBeLessThan((done + 1) / lane.steps.length);
+    }
+  });
+
   it("shows every step once, with each agent holding one card", () => {
     expect(cards(INITIAL_WORK)).toHaveLength(24);
     expect(column(INITIAL_WORK, "done")).toHaveLength(12);
