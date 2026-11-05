@@ -25,7 +25,7 @@ export const CHORES: Record<AgentId, readonly Chore[]> = {
   ],
   sol: [
     { label: "tightening a line", tool: "ibeam", on: TEXT },
-    { label: "finding a plainer word", tool: "ibeam", on: TEXT },
+    { label: "sharpening the copy", tool: "ibeam", on: TEXT },
   ],
   ivo: [
     { label: "measuring spacing", tool: "cross", on: ANY, guide: true },
