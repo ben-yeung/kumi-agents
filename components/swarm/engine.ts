@@ -64,6 +64,8 @@ const AFTER_JOB_MS: [number, number] = [3000, 7000];
 const ARRIVAL_MS: [number, number] = [10_000, 18_000];
 
 const ENTRY_EDGES: Edge[] = ["left", "right", "bottom"];
+/** How far in from the side an agent keeps, so a whole cursor always shows (px). */
+const MARGIN_INSET = 64;
 
 /** Finished pieces in view an agent chooses from during the intro, newest first. */
 const RECENT_WORK = 4;
@@ -186,10 +188,7 @@ export class SwarmEngine {
     const landing = this.opts.handoff ? null : this.landingSection();
     this.observeSections();
     if (landing) this.landOn(landing);
-    else {
-      this.planIntro();
-      this.activate(HERO_SECTION);
-    }
+    else this.activate(HERO_SECTION);
     window.addEventListener(BUILD_ADD_EVENT, this.onBuildAdd);
     window.addEventListener(CREW_ERRAND_EVENT, this.onErrand);
     window.addEventListener("scroll", this.onScroll, { passive: true });
@@ -451,6 +450,8 @@ export class SwarmEngine {
         const el = this.els.get(task.id)!;
         const undos: (() => void)[] = [];
         try {
+          // A staggered start is spent walking in, never held at the door.
+          if (task.delay) this.approach(agent, el);
           await agent.sleep((task.delay ?? 0) * 1000);
           const work = task.errand ?? runEffect;
           await work({
@@ -524,14 +525,18 @@ export class SwarmEngine {
   }
 
   private startChores(agent: AgentRuntime) {
-    const token = this.choreToken.get(agent.id) ?? 0;
+    const token = this.choreTokenOf(agent);
     if (this.choring.get(agent.id) === token) return;
     this.choring.set(agent.id, token);
     this.doChores(agent, token).catch(() => {});
   }
 
+  private choreTokenOf(agent: AgentRuntime) {
+    return this.choreToken.get(agent.id) ?? 0;
+  }
+
   private stopChores(agent: AgentRuntime) {
-    this.choreToken.set(agent.id, (this.choreToken.get(agent.id) ?? 0) + 1);
+    this.choreToken.set(agent.id, this.choreTokenOf(agent) + 1);
   }
 
   /** One thing after another, each given time to read as what it is. */
@@ -570,8 +575,14 @@ export class SwarmEngine {
   private async standBy(agent: AgentRuntime, live: () => boolean) {
     agent.setAction(null);
     agent.setTool("dart");
-    await agent.moveTo(this.nextJobPoint(agent) ?? this.marginPoint(agent.pos()), { speed: 0.4 });
+    await agent.moveTo(this.nextJobPoint(agent) ?? this.marginPoint(agent.pos()), { speed: 0.7 });
     if (live()) await agent.sleep(this.rng.int(900, 1800));
+  }
+
+  /** Heads for a job without waiting to arrive; the job's own move takes over. */
+  private approach(agent: AgentRuntime, el: HTMLElement) {
+    const r = rectOf(el);
+    agent.moveTo({ x: r.x + Math.min(r.w * 0.1, 16), y: r.y + r.h * 0.5 }).catch(() => {});
   }
 
   /** Somewhere on the agent's next assigned job, if they have one. */
@@ -706,9 +717,9 @@ export class SwarmEngine {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const left = near.x - window.scrollX < vw / 2;
-    const fx = left ? 0.008 + this.rng.next() * 0.03 : 0.955 + this.rng.next() * 0.03;
+    const inset = MARGIN_INSET + this.rng.next() * vw * 0.05;
     return {
-      x: window.scrollX + vw * fx,
+      x: window.scrollX + (left ? inset : vw - inset),
       y: window.scrollY + vh * (0.25 + this.rng.next() * 0.6),
     };
   }
@@ -810,7 +821,7 @@ export class SwarmEngine {
     this.completePasses(section);
     // A section is starting: chores wait until it is up.
     this.working()
-      .filter((a) => this.choring.get(a.id) === this.choreToken.get(a.id))
+      .filter((a) => this.choring.get(a.id) === this.choreTokenOf(a))
       .forEach((a) => this.stopChores(a));
     if (section !== HERO_SECTION) this.grow();
     this.wake();

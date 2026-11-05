@@ -12,11 +12,14 @@ const AFTER_SETTLE_MS = 9000;
 const SAMPLE_MS = 100;
 /** A label held for fewer samples than this is still being typed into the tag. */
 const STABLE_SAMPLES = 4;
-const LIMITS = { stillSeconds: 4.5, shortestLabelSeconds: 1.2 };
+const LIMITS = { stillSeconds: 4.5, shortestLabelSeconds: 1.2, edgeSeconds: 1.2 };
+const VIEWPORT = { width: 1440, height: 900 };
+/** Closer to the side of the screen than this, only a name tag shows. */
+const EDGE = 48;
 const PASSIVE = /\b(rest|paus|wait|leav|stretch|tidy|pairing)/;
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const ctx = await browser.newContext({ viewport: VIEWPORT });
 const page = await ctx.newPage();
 const runs = [];
 
@@ -84,7 +87,24 @@ function longestStill(samples) {
   return longest / 1000;
 }
 
-const totals = { still: 0, shortest: Infinity, passive: new Set(), midBuild: new Set() };
+/** The longest an agent hung about at the very edge of the screen. */
+function longestAtEdge(samples) {
+  // The nav lives along the top, so only being off the top counts there.
+  const atEdge = (s) =>
+    s.x < EDGE || s.x > VIEWPORT.width - EDGE || s.y < 0 || s.y > VIEWPORT.height - EDGE;
+  let longest = 0;
+  let from = null;
+  for (const s of samples) {
+    if (!atEdge(s)) from = null;
+    else {
+      from ??= s;
+      longest = Math.max(longest, s.t - from.t);
+    }
+  }
+  return longest / 1000;
+}
+
+const totals = { edge: 0, still: 0, shortest: Infinity, passive: new Set(), midBuild: new Set() };
 
 for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   const mine = runs.filter((r) => r.choreography === name);
@@ -92,6 +112,9 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
     [...new Set(r.samples.map((s) => s.name))].map((n) => r.samples.filter((s) => s.name === n)),
   );
   const still = Math.max(...agents.map(longestStill));
+  // Heading off the page at the end is fine; it is hanging about in the intro that shows.
+  const edge = Math.max(...agents.map((list) => longestAtEdge(list.filter((s) => !s.settled))));
+  totals.edge = Math.max(totals.edge, edge);
   const perAgent = agents.map(labelRuns);
   const words = [...new Set(perAgent.flat().map((r) => r.action))];
   // A word that starts a longer one is the tag still typing or erasing.
@@ -113,6 +136,7 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   totals.shortest = Math.min(totals.shortest, shortest);
   console.log(`\n${name} (${mine.length} loads)`);
   console.log(`  longest stood still ${still.toFixed(1)}s`);
+  console.log(`  longest at the edge ${edge.toFixed(1)}s`);
   console.log(`  shortest chore      ${shortest.toFixed(1)}s`);
   console.log(
     `  label changes       ${((labels.flat().length / seconds) * 60).toFixed(0)} per agent-minute`,
@@ -121,12 +145,13 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
 }
 
 const ok =
+  totals.edge <= LIMITS.edgeSeconds &&
   totals.still <= LIMITS.stillSeconds &&
   totals.shortest >= LIMITS.shortestLabelSeconds &&
   totals.passive.size === 0 &&
   totals.midBuild.size === 0;
 console.log(
-  `\nworst: still ${totals.still.toFixed(1)}s, shortest label ${totals.shortest.toFixed(1)}s, ` +
+  `\nworst: edge ${totals.edge.toFixed(1)}s, still ${totals.still.toFixed(1)}s, shortest label ${totals.shortest.toFixed(1)}s, ` +
     `passive [${[...totals.passive].join(", ")}], ` +
     `chores mid-build [${[...totals.midBuild].join(", ")}]`,
 );
