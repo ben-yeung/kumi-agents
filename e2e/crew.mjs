@@ -207,13 +207,12 @@ for (const width of [1440, 2560]) {
   await page.evaluate(() => {
     window.__drag = [];
     setInterval(() => {
-      const lifted = document.querySelector('[class*="lifted"]');
-      if (!lifted) return;
-      const author = lifted.getAttribute("data-agent");
-      const carrier = [...document.querySelectorAll("[data-swarm-agent]")]
+      const carriers = [...document.querySelectorAll("[data-swarm-agent]")]
         .map((c) => c.textContent.trim())
-        .find((t) => /moving card|picking up/.test(t));
-      window.__drag.push({ author, carrier });
+        .filter((t) => /moving|picking/.test(t));
+      for (const card of document.querySelectorAll('[class*="lifted"]')) {
+        window.__drag.push({ author: card.getAttribute("data-agent"), carriers });
+      }
     }, 30);
   });
   await page.evaluate(() =>
@@ -227,11 +226,15 @@ for (const width of [1440, 2560]) {
   );
   const moved = await columns();
   const dragged = await page.evaluate(() => window.__drag);
-  const stranger = dragged.filter((d) => d.carrier && !d.carrier.startsWith(d.author));
+  // Tags type their words out, so a sample can fall before the status shows.
+  const stranger = dragged.filter(
+    (d) => d.carriers.length && !d.carriers.some((c) => c.startsWith(d.author)),
+  );
   check(
     "agents drag their own cards to Completed",
     moved.done.length > startDone && dragged.length > 0 && stranger.length === 0,
-    `${startDone} -> ${moved.done.length} completed, top card ${moved.done[0]}`,
+    `${startDone} -> ${moved.done.length} completed, top card ${moved.done[0]}, ` +
+      `${dragged.length} samples, wrong: ${JSON.stringify(stranger.slice(0, 3))}`,
   );
 
   await page.getByRole("button", { name: "notes" }).click();

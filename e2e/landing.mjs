@@ -111,6 +111,39 @@ await landing("reload mid-page", async (page) => {
   await page.close();
 }
 
+// Jumping past sections from the top leaves no gap behind.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(base);
+  await page.getByRole("button", { name: "skip intro" }).click();
+  await page.getByRole("button", { name: "replay" }).waitFor({ timeout: 40000 });
+  await page.evaluate(() => document.getElementById("log").scrollIntoView({ behavior: "instant" }));
+  await allBuilt(page);
+  check("sections jumped past still get built", true);
+  await page.close();
+}
+
+// Scrolling up to the hero while the crew works up the page brings it forward.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.addInitScript(track);
+  await page.goto(`${base}/#log`);
+  await page.waitForFunction(() => document.querySelector("#log [data-built]"));
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await page.waitForFunction(
+    () => document.querySelector('section[data-build-section="hero"] [data-built]'),
+    null,
+    { timeout: 30000 },
+  );
+  const { first } = await page.evaluate(() => window.__build);
+  check(
+    "scrolling up to the hero brings it forward",
+    !("hands" in first) && !("method" in first),
+    JSON.stringify(first),
+  );
+  await page.close();
+}
+
 // A normal visit still opens with the hero intro.
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

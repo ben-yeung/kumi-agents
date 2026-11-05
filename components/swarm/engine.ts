@@ -153,8 +153,6 @@ export class SwarmEngine {
   private arrivalTimer = 0;
   /** Sections on screen right now. */
   private inView = new Set<string>();
-  /** Still to build above where the visit opened, nearest first. */
-  private sectionsAbove: string[] = [];
   private focusIo: IntersectionObserver | null = null;
   /** Undo work for effects in progress, run synchronously on teardown. */
   private teardowns = new Set<() => void>();
@@ -386,10 +384,6 @@ export class SwarmEngine {
    * then that section, then the crew works back up the page to the hero.
    */
   private landOn(section: string) {
-    const names = [...document.querySelectorAll<HTMLElement>("[data-build-section]")]
-      .filter((el) => el.tagName !== "HEADER")
-      .map((el) => el.dataset.buildSection!);
-    this.sectionsAbove = names.slice(0, names.indexOf(section)).reverse();
     this.tasks = this.tasks.map((t) =>
       t.id.startsWith("nav.") ? { ...t, section: NAV_SECTION } : t,
     );
@@ -399,10 +393,17 @@ export class SwarmEngine {
     this.activate(section);
   }
 
-  /** One section at a time, nearest the visitor first. */
+  /**
+   * Once nothing is going up, any section above one already started gets built,
+   * one at a time and nearest first, so the page never has a gap in it.
+   */
   private workUpThePage() {
     if (sectionBuilding(this.state())) return;
-    const next = this.sectionsAbove.find((s) => !this.active.has(s));
+    const names = [...document.querySelectorAll<HTMLElement>("[data-build-section]")]
+      .filter((el) => el.tagName !== "HEADER")
+      .map((el) => el.dataset.buildSection!);
+    const started = names.findLastIndex((name) => this.active.has(name));
+    const next = names.slice(0, started).findLast((name) => !this.active.has(name));
     if (next) this.activate(next);
   }
 
@@ -778,13 +779,15 @@ export class SwarmEngine {
           if (entry.isIntersecting) this.inView.add(section);
           else this.inView.delete(section);
         }
+        this.workUpThePage();
       },
       { rootMargin: "0px 0px -18% 0px" },
     );
     document.querySelectorAll<HTMLElement>("[data-build-section]").forEach((el) => {
       // The header is pinned on screen, so it says nothing about where the visitor is.
-      if (el.tagName !== "HEADER") this.focusIo!.observe(el);
-      if (el.dataset.buildSection !== HERO_SECTION) this.io!.observe(el);
+      if (el.tagName === "HEADER") return;
+      this.focusIo!.observe(el);
+      this.io!.observe(el);
     });
   }
 
