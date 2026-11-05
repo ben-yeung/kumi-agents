@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { HandsBoard } from "@/components/sections/HandsBoard";
 import { LaneRule } from "@/components/sections/LaneRule";
-import { workOnBoard, workOnNote, type VisitActions } from "@/components/sections/handsWork";
+import {
+  addToBoard,
+  addToNote,
+  workOnBoard,
+  workOnNote,
+  type AddActions,
+  type VisitActions,
+} from "@/components/sections/handsWork";
 import {
   CREW_ERRAND_EVENT,
   SECTION_BUILT_EVENT,
@@ -17,15 +24,20 @@ import {
   INITIAL_WORK,
   LANES,
   finishStep,
+  hasWork,
   heldCard,
   isFinished,
+  nextToWrite,
+  openPiece,
   pickLane,
+  planCardVisit,
   planVisit,
   setProgress,
+  settleOpening,
   settleVisit,
   startCard,
+  writeStep,
   type Lane,
-  type Visit,
   type Work,
 } from "@/lib/lanes";
 import { createRng, randomSeed } from "@/lib/rng";
@@ -42,11 +54,14 @@ const VISIT_MS: [number, number] = [4000, 8000];
 const MAX_VISITS = 2;
 /** The foot of a column fades out; cards under it are not worked on. */
 const COLUMN_FADE = 56;
+/** Room an agent needs at the top of Planned to add new cards. */
+const PLANNED_ROOM = 120;
 
 /**
  * The agents' work, as eight notes or as a board. Once the crew has built the
  * section, agents keep coming back to move their own work along while it is
- * on screen. The notes stay mounted under the board so they stay built.
+ * on screen, adding new tasks as they finish. The notes stay mounted under the
+ * board so they stay built.
  */
 export function LiveHands() {
   const [work, setWork] = useState<Work>(INITIAL_WORK);
@@ -102,17 +117,22 @@ export function LiveHands() {
       const list = root.querySelector('[data-column="doing"] ol')?.getBoundingClientRect();
       const clear = list && new DOMRect(list.x, list.y, list.width, list.height - COLUMN_FADE);
       const held = root.querySelectorAll<HTMLElement>('[data-status="doing"]');
-      return [...held].filter((c) => fits(c, clear)).map((c) => c.dataset.agent as AgentId);
+      const working = [...held]
+        .filter((c) => fits(c, clear))
+        .map((c) => c.dataset.agent as AgentId);
+      // Agents between pieces hold no card; they write theirs at the top of Planned.
+      const planned = root.querySelector('[data-column="planned"] ol')?.getBoundingClientRect();
+      const roomy = planned && planned.top >= 0 && planned.top + PLANNED_ROOM <= innerHeight;
+      const between = workRef.current.lanes.filter(isFinished).map((l) => l.agent);
+      return roomy ? [...working, ...between] : working;
     };
 
     function visit() {
-      if (workRef.current.lanes.every(isFinished)) return;
+      if (!workRef.current.lanes.some(hasWork)) return;
       if (visiting.size >= MAX_VISITS || !inView || document.hidden) return schedule(VISIT_MS);
       const free = visibleAgents().filter((id) => !visiting.has(id));
       const lane = pickLane(workRef.current.lanes, free, lastVisit);
       if (!lane) return schedule(VISIT_MS);
-      const plan = planVisit(lane, rng);
-      if (!plan) return schedule(VISIT_MS);
       visiting.add(lane.agent);
       lastVisit.set(lane.agent, performance.now());
       schedule(VISIT_MS);
@@ -123,39 +143,60 @@ export function LiveHands() {
             label: "updating progress",
             section: SECTION,
             el: root!,
-            run: (ctx) => carryOut(ctx, lane, plan),
+            run: (ctx) => carryOut(ctx, lane.agent),
           },
         }),
       );
     }
 
-    async function carryOut(ctx: Parameters<Errand["run"]>[0], lane: Lane, plan: Visit) {
+    /**
+     * Errands wait their turn, so what a visit does is decided here, when the
+     * agent gets to it, from the view and work as they stand by then.
+     */
+    async function carryOut(ctx: Parameters<Errand["run"]>[0], id: AgentId) {
       const thisRun = run;
       const seen = viewRef.current;
       const live = () => thisRun === run && viewRef.current === seen;
-      const actions: VisitActions = {
+      const lane = workRef.current.lanes.find((l) => l.agent === id)!;
+      const plan = seen === "board" ? planCardVisit(lane) : planVisit(lane, rng);
+      const pickUp = {
         alive: live,
-        progress: (value) => live() && update((w) => setProgress(w, plan.agent, value)),
-        finishStep: (hold) =>
-          live() && update((w) => finishStep(w, plan.agent, plan.tick!, hold), true),
         startNext: () => {
-          const id = heldCard(workRef.current, plan.agent);
-          if (id && live()) update((w) => startCard(w, id), true);
+          const card = heldCard(workRef.current, id);
+          if (card && live()) update((w) => startCard(w, card), true);
         },
-        nextCard: () => heldCard(workRef.current, plan.agent),
+        nextCard: () => heldCard(workRef.current, id),
       };
-      const held = root!.querySelector<HTMLElement>(
-        `[data-status="doing"][data-agent="${plan.agent}"]`,
-      );
-      const note = root!.querySelector<HTMLElement>(`[data-lane="${plan.agent}"]`);
+      const note = root!.querySelector<HTMLElement>(`[data-lane="${id}"]`);
       try {
+        if (!plan) {
+          const actions: AddActions = {
+            ...pickUp,
+            open: () => live() && update((w) => openPiece(w, id), true),
+            write: () => {
+              const now = workRef.current.lanes.find((l) => l.agent === id)!;
+              const card = nextToWrite(now);
+              if (card && live()) update((w) => writeStep(w, id), true);
+              return card;
+            },
+          };
+          if (seen === "board") await addToBoard(ctx, root!, actions);
+          else if (seen === "notes" && note) await addToNote(ctx, note, actions);
+          return;
+        }
+        const actions: VisitActions = {
+          ...pickUp,
+          progress: (value) => live() && update((w) => setProgress(w, id, value)),
+          finishStep: (hold) => live() && update((w) => finishStep(w, id, plan.tick!, hold), true),
+        };
+        const held = root!.querySelector<HTMLElement>(`[data-status="doing"][data-agent="${id}"]`);
         if (seen === "board" && held) await workOnBoard(ctx, root!, held, plan, actions);
         else if (seen === "notes" && note) await workOnNote(ctx, note, plan, actions);
       } finally {
         // Replays start from scratch; otherwise the visit always lands.
         if (thisRun === run) {
-          update((w) => settleVisit(w, plan));
-          visiting.delete(plan.agent);
+          update((w) => (plan ? settleVisit(w, plan) : settleOpening(w, id)));
+          visiting.delete(id);
         }
       }
     }
@@ -260,8 +301,14 @@ function Note({ lane }: { lane: Lane }) {
         {lane.piece}
       </h3>
       <ul className={styles.steps} {...build("list", "listing steps")}>
-        {lane.steps.map((s) => (
-          <li key={s.text} className={styles.step} data-step="" data-done={s.done}>
+        {lane.steps.map((s, i) => (
+          <li
+            key={s.text}
+            className={styles.step}
+            data-step=""
+            data-done={s.done}
+            data-unwritten={i >= lane.written || undefined}
+          >
             <svg viewBox="0 0 16 16" aria-hidden="true">
               {s.done ? (
                 <path d="M3.2 8.6c1.3 1 2.3 2 3.2 3.1 2-3 4-5.3 6.6-7.6" />

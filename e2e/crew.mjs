@@ -193,7 +193,8 @@ for (const width of [1440, 2560]) {
     );
   const start = await columns();
   const size = (c) => Object.values(c).flat().length;
-  check("the board holds every step", size(start) === 24, `${size(start)} cards`);
+  // Agents may already have added tasks of their own by now.
+  check("the board holds every step", size(start) >= 24, `${size(start)} cards`);
 
   await page.evaluate(() => {
     window.__drag = [];

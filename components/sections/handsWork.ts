@@ -15,7 +15,16 @@ export type VisitActions = {
   nextCard: () => string | null;
 };
 
+/** What adding a piece changes. */
+export type AddActions = Pick<VisitActions, "alive" | "startNext" | "nextCard"> & {
+  /** Takes the next piece from the backlog, with nothing written yet. */
+  open: () => void;
+  /** Writes down the next step, and returns its card if there was one. */
+  write: () => string | null;
+};
+
 const POP = [{ transform: "scale(0.5)" }, { transform: "scale(1.2)" }, { transform: "none" }];
+const WRITE_MS = 340;
 
 async function drawProgress(ctx: EffectContext, root: Element, visit: Visit, act: VisitActions) {
   const { agent } = ctx;
@@ -121,7 +130,17 @@ function columnList(root: HTMLElement, status: string) {
   return root.querySelector<HTMLElement>(`[data-column="${status}"] ol`);
 }
 
-/** On the board: draw the card's rule, then drag finished work across. */
+/** Brings up the card waiting in Planned. */
+async function pickUpNext(ctx: EffectContext, root: HTMLElement, act: AddActions | VisitActions) {
+  const nextId = act.nextCard();
+  const next = nextId ? cardEl(root, nextId) : null;
+  const doing = columnList(root, "doing");
+  if (!next || !doing || !act.alive()) return;
+  ctx.agent.setTool("dart");
+  await drag(ctx, next, doing, "picking up next", () => act.startNext());
+}
+
+/** On the board: take the card to 100%, then drag it to Completed. */
 export async function workOnBoard(
   ctx: EffectContext,
   root: HTMLElement,
@@ -130,17 +149,52 @@ export async function workOnBoard(
   act: VisitActions,
 ) {
   await drawProgress(ctx, card, visit, act);
-  if (visit.tick === null || !act.alive()) return;
+  if (!act.alive()) return;
 
   const done = columnList(root, "done");
   if (!done) return;
   await drag(ctx, card, done, "moving card", () => act.finishStep(true));
   await ctx.agent.sleep(420);
+  await pickUpNext(ctx, root, act);
+}
 
-  const nextId = act.nextCard();
-  const next = nextId ? cardEl(root, nextId) : null;
-  const doing = columnList(root, "doing");
-  if (!next || !doing || !act.alive()) return;
-  ctx.agent.setTool("dart");
-  await drag(ctx, next, doing, "picking up next", () => act.startNext());
+/** On a note: retitle it, then write the new steps out one by one. */
+export async function addToNote(ctx: EffectContext, note: HTMLElement, act: AddActions) {
+  const { agent } = ctx;
+  const title = note.querySelector("h3");
+  if (!title) return;
+  const r = rectOf(title);
+  agent.setAction("adding tasks");
+  await agent.moveTo({ x: r.x + 8, y: r.y + r.h / 2 });
+  agent.setTool("pencil");
+  await agent.tap();
+  if (!act.alive()) return;
+  act.open();
+  for (const step of note.querySelectorAll<HTMLElement>("[data-step]")) {
+    const s = rectOf(step);
+    await agent.moveTo({ x: s.x + 8, y: s.y + s.h / 2 });
+    if (!act.alive()) return;
+    act.write();
+    await agent.sleep(WRITE_MS);
+  }
+}
+
+/** On the board: write new cards at the top of Planned, then pick up the first. */
+export async function addToBoard(ctx: EffectContext, root: HTMLElement, act: AddActions) {
+  const { agent } = ctx;
+  const planned = columnList(root, "planned");
+  if (!planned) return;
+  const r = rectOf(planned);
+  agent.setAction("adding tasks");
+  await agent.moveTo({ x: r.x + Math.min(r.w * 0.3, 40), y: r.y + 24 });
+  agent.setTool("pencil");
+  await agent.tap();
+  if (!act.alive()) return;
+  act.open();
+  for (let id = act.write(); id; id = act.write()) {
+    cardEl(root, id)?.animate(POP, { duration: 320 / ctx.speed() });
+    await agent.sleep(WRITE_MS);
+    if (!act.alive()) return;
+  }
+  await pickUpNext(ctx, root, act);
 }

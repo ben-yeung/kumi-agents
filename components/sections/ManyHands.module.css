@@ -138,6 +138,11 @@
   stroke-linejoin: round;
 }
 
+/* Held open while it is written, so the note does not change height. */
+.step[data-unwritten] {
+  visibility: hidden;
+}
+
 .step[data-done="true"] svg {
   stroke: var(--a);
   stroke-width: 2;
