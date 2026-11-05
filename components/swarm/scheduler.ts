@@ -7,6 +7,8 @@ export type SchedulerState = {
   activeSections: ReadonlySet<string>;
   /** Agents currently on the crew. */
   crew: readonly AgentId[];
+  /** Sections the visitor is looking at; their work comes first. */
+  focus?: ReadonlySet<string>;
 };
 
 /** A task can start when its section is live and everything it waits on is done. */
@@ -38,10 +40,11 @@ export function pickTask(
   state: SchedulerState,
   distanceTo: (task: Task) => number = () => 0,
 ): Task | null {
+  const ready = state.tasks.filter((t) => isReady(t, state) && canTake(t, agent, state));
+  const seen = ready.filter((t) => state.focus?.has(t.section));
   let best: Task | null = null;
   let bestDist = Infinity;
-  for (const task of state.tasks) {
-    if (!isReady(task, state) || !canTake(task, agent, state)) continue;
+  for (const task of seen.length ? seen : ready) {
     if (best === null || task.order < best.order) {
       best = task;
       bestDist = distanceTo(task);

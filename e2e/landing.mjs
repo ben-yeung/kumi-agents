@@ -16,7 +16,8 @@ const track = () => {
   setInterval(() => {
     const swarm = document.documentElement.hasAttribute("data-swarm");
     if (!swarm) return;
-    for (const s of document.querySelectorAll("[data-build-section]")) {
+    // The pinned header shares the hero's name but goes up first, by design.
+    for (const s of document.querySelectorAll("[data-build-section]:not(header)")) {
       const name = s.dataset.buildSection;
       const all = s.querySelectorAll("[data-build]");
       const built = s.querySelectorAll("[data-build][data-built]").length;
@@ -29,12 +30,25 @@ const track = () => {
   }, 50);
 };
 
-const allBuilt = (page, timeout = 150000) =>
-  page.waitForFunction(
-    () => document.querySelectorAll("[data-build]:not([data-built])").length === 0,
-    null,
-    { timeout },
-  );
+/** Everything from the top of the page down to where the visit is. Lower sections wait. */
+async function allBuilt(page, timeout = 120000) {
+  const left = () =>
+    ["hero", "hands", "method", "log"].flatMap((name) => [
+      ...document.querySelectorAll(
+        `[data-build-section="${name}"] [data-build]:not([data-built]), ` +
+          `[data-build-section="${name}"][data-build]:not([data-built])`,
+      ),
+    ]);
+  try {
+    await page.waitForFunction(`(${left})().length === 0`, null, { timeout });
+  } catch (err) {
+    const stuck = await page.evaluate(
+      `(${left})().map((el) => el.dataset.buildId + " " + el.dataset.buildLabel)`,
+    );
+    const crew = await page.locator("[data-swarm-crew]").textContent();
+    throw new Error(`stuck on ${stuck.join(", ")} with ${crew}`, { cause: err });
+  }
+}
 
 async function landing(name, arrive) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

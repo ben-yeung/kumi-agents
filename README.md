@@ -47,6 +47,9 @@ While a section is going up, anyone without a part left stays quiet.
 When nothing is left they leave for a named objective, so the page stays uncrowded.
 Live work uses the same rule: work-log rows, and errands such as moving a card along the #hands board.
 
+A visit that opens further down the page skips the intro: the section in view builds first, then the crew works back up to the hero.
+Whatever the visitor is looking at always comes first.
+
 The overall pace is one constant, `TEMPO` in `engine.ts`.
 
 Visitors who prefer reduced motion get the finished page with no cursors.
@@ -60,6 +63,7 @@ Run `npx playwright install chromium` once first.
 ```bash
 node e2e/behaviors.mjs http://localhost:3000       # behavior checks
 node e2e/crew.mjs http://localhost:3000            # authorship, rotation, notes, board, footer
+node e2e/landing.mjs http://localhost:3000         # opening mid-page builds what is in view first
 node e2e/intro-idle.mjs http://localhost:3000 --strict  # nobody stands still or says anything passive
 node e2e/screenshots.mjs http://localhost:3000     # mobile, laptop, 4K, both themes
 node e2e/intro-frames.mjs http://localhost:3000    # frames of the intro and scroll build

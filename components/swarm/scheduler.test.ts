@@ -92,6 +92,14 @@ describe("scheduler", () => {
     expect(pickTask("ren", state([tasks[2], tasks[0]]), dist)?.id).toBe("far");
   });
 
+  it("puts work the visitor is looking at first", () => {
+    const tasks = [task("above", { order: 1 }), task("here", { section: "seen", order: 2 })];
+    const active = new Set(["s", "seen"]);
+    const s = state(tasks, {}, { activeSections: active, focus: new Set(["seen"]) });
+    expect(pickTask("ren", s)?.id).toBe("here");
+    expect(pickTask("ren", state([tasks[0]], {}, { focus: new Set(["seen"]) }))?.id).toBe("above");
+  });
+
   it("skips claimed and done work", () => {
     const tasks = [task("a"), task("b"), task("c")];
     const s = state(tasks, { a: "done", b: "claimed" });

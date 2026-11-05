@@ -38,6 +38,8 @@ import {
 } from "@/components/swarm/types";
 
 export const HERO_SECTION = "hero";
+/** The header, split off from the hero when a visit opens further down. */
+const NAV_SECTION = "nav";
 
 const LAST_CHOREO_KEY = "kumi-last-choreo";
 
@@ -149,6 +151,11 @@ export class SwarmEngine {
   /** When each agent was last on the crew, so everyone gets a turn. */
   private lastSeen = new Map<AgentId, number>();
   private arrivalTimer = 0;
+  /** Sections on screen right now. */
+  private inView = new Set<string>();
+  /** Still to build above where the visit opened, nearest first. */
+  private sectionsAbove: string[] = [];
+  private focusIo: IntersectionObserver | null = null;
   /** Undo work for effects in progress, run synchronously on teardown. */
   private teardowns = new Set<() => void>();
   /** Agents on their way out; still drawn, but no longer counted as crew. */
@@ -178,10 +185,13 @@ export class SwarmEngine {
     });
     if (inherited.length) this.opts.onCrew([...this.crew]);
 
-    this.planIntro();
-
+    const landing = this.opts.handoff ? null : this.landingSection();
     this.observeSections();
-    this.activate(HERO_SECTION);
+    if (landing) this.landOn(landing);
+    else {
+      this.planIntro();
+      this.activate(HERO_SECTION);
+    }
     window.addEventListener(BUILD_ADD_EVENT, this.onBuildAdd);
     window.addEventListener(CREW_ERRAND_EVENT, this.onErrand);
     window.addEventListener("scroll", this.onScroll, { passive: true });
@@ -199,6 +209,7 @@ export class SwarmEngine {
   destroy() {
     this.aborted = true;
     this.io?.disconnect();
+    this.focusIo?.disconnect();
     window.clearTimeout(this.arrivalTimer);
     window.removeEventListener(BUILD_ADD_EVENT, this.onBuildAdd);
     window.removeEventListener(CREW_ERRAND_EVENT, this.onErrand);
@@ -289,7 +300,8 @@ export class SwarmEngine {
       cast: [...this.rng.shuffle(onCrew), ...others],
     });
     this.plan = plan;
-    this.setPhase("intro");
+    // Reached last, when a visit opened further down, it is no longer an intro.
+    if (this.phase === "intro") this.setPhase("intro");
 
     this.tasks = this.tasks.map((t) => {
       const o = plan.overrides.get(t.id);
@@ -354,6 +366,46 @@ export class SwarmEngine {
     }
   }
 
+  /** The section a visit opened on, if that is not the top of the page. */
+  private landingSection() {
+    // Smooth scrolling would glide a hash link past every section on the way.
+    const target = document.getElementById(window.location.hash.slice(1));
+    target?.scrollIntoView({ behavior: "instant" });
+    const line = window.innerHeight * 0.4;
+    const section = [...document.querySelectorAll<HTMLElement>("[data-build-section]")].find(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return el.tagName !== "HEADER" && r.top <= line && r.bottom > line;
+      },
+    )?.dataset.buildSection;
+    return section && section !== HERO_SECTION ? section : null;
+  }
+
+  /**
+   * Opens on a section further down: the header, always in view, goes up first,
+   * then that section, then the crew works back up the page to the hero.
+   */
+  private landOn(section: string) {
+    const names = [...document.querySelectorAll<HTMLElement>("[data-build-section]")]
+      .filter((el) => el.tagName !== "HEADER")
+      .map((el) => el.dataset.buildSection!);
+    this.sectionsAbove = names.slice(0, names.indexOf(section)).reverse();
+    this.tasks = this.tasks.map((t) =>
+      t.id.startsWith("nav.") ? { ...t, section: NAV_SECTION } : t,
+    );
+    this.active.add(NAV_SECTION);
+    this.inView.add(NAV_SECTION).add(section);
+    this.setPhase("settled");
+    this.activate(section);
+  }
+
+  /** One section at a time, nearest the visitor first. */
+  private workUpThePage() {
+    if (sectionBuilding(this.state())) return;
+    const next = this.sectionsAbove.find((s) => !this.active.has(s));
+    if (next) this.activate(next);
+  }
+
   /** New sections bring new hands: everyone named, or a few to share the work. */
   private grow() {
     const named = missingOwners(this.state()).length > 0;
@@ -369,6 +421,7 @@ export class SwarmEngine {
       status: this.status,
       activeSections: this.active,
       crew: this.working().map((a) => a.id),
+      focus: this.inView,
     };
   }
 
@@ -640,7 +693,7 @@ export class SwarmEngine {
         const { min, max } = restingCrew(this.maxCrew);
         const short = this.rng.int(min, max) - this.working().length;
         const quiet = backlog(this.state()) === 0 && !sectionBuilding(this.state());
-      if (!document.hidden && quiet && short > 0) this.bringFreshHands(1);
+        if (!document.hidden && quiet && short > 0) this.bringFreshHands(1);
         this.scheduleArrival();
       },
       this.rng.int(...ARRIVAL_MS),
@@ -694,6 +747,7 @@ export class SwarmEngine {
     if (sectionDone(task.section, state)) {
       window.dispatchEvent(new CustomEvent(SECTION_BUILT_EVENT, { detail: task.section }));
     }
+    this.workUpThePage();
     this.wake();
   }
 
@@ -717,9 +771,21 @@ export class SwarmEngine {
       },
       { rootMargin: "0px 0px -18% 0px" },
     );
-    document
-      .querySelectorAll<HTMLElement>("[data-build-section]")
-      .forEach((el) => el.dataset.buildSection !== HERO_SECTION && this.io!.observe(el));
+    this.focusIo = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const section = (entry.target as HTMLElement).dataset.buildSection!;
+          if (entry.isIntersecting) this.inView.add(section);
+          else this.inView.delete(section);
+        }
+      },
+      { rootMargin: "0px 0px -18% 0px" },
+    );
+    document.querySelectorAll<HTMLElement>("[data-build-section]").forEach((el) => {
+      // The header is pinned on screen, so it says nothing about where the visitor is.
+      if (el.tagName !== "HEADER") this.focusIo!.observe(el);
+      if (el.dataset.buildSection !== HERO_SECTION) this.io!.observe(el);
+    });
   }
 
   private onScroll = () => {
@@ -728,13 +794,16 @@ export class SwarmEngine {
     if (!atBottom) return;
     document.querySelectorAll<HTMLElement>("[data-build-section]").forEach((el) => {
       const section = el.dataset.buildSection;
-      if (section && el.getBoundingClientRect().top < window.innerHeight) this.activate(section);
+      const r = el.getBoundingClientRect();
+      const onScreen = r.top < window.innerHeight && r.bottom > 0;
+      if (section && onScreen && el.tagName !== "HEADER") this.activate(section);
     });
   };
 
   private activate(section: string) {
     if (this.active.has(section)) return;
     this.active.add(section);
+    if (section === HERO_SECTION && !this.plan) this.planIntro();
     this.completePasses(section);
     // A section is starting: chores wait until it is up.
     this.working()
