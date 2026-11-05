@@ -112,8 +112,9 @@ export const CHOREOGRAPHIES: readonly Choreography[] = [
   },
 ];
 
-const REWRITES: Record<string, string[]> = {
-  fit: ["cut", "joint", "seam"],
+/** A word in the hero title, and what an agent may try there before settling on it. */
+export const REWRITES: Record<string, string[]> = {
+  piece: ["task", "ticket", "feature", "module"],
 };
 
 export type HeroPlan = {

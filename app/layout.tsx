@@ -30,8 +30,8 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kumi - many hands, one clean fit",
-  description: "Kumi gives every piece of your project its own pair of hands.",
+  title: "Kumi - a pair of hands for every piece",
+  description: "Kumi puts a crew of agents on your project, each with its own piece to shape.",
 };
 
 export const viewport: Viewport = {

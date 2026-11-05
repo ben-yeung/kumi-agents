@@ -38,21 +38,23 @@ In the hero, the second title line is sans-serif, and "kumi" in the description 
 
 ## One-liner
 
-> Many hands, one clean fit.
+> A pair of hands for every piece.
 
 ## Hero
 
-**Headline:** Many hands, one clean fit.
+**Headline:** A pair of hands for every piece.
+
+On most builds an agent first types another word in place of "piece" (task, ticket, feature or module), thinks better of it and rewrites it.
 
 **Subcopy:**
 
-- Kumi gives every piece of your project its own pair of hands.
+- Kumi puts a crew of agents on your project, each with its own piece to shape.
 
 **Primary CTA:** Join the waitlist
 
 **Secondary CTA:** Watch them work
 
-**Ensō caption:** the next innovation, sewn together
+**Ensō caption:** cut apart, drawn back into one
 
 ## Sections
 

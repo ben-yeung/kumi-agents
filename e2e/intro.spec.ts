@@ -113,8 +113,6 @@ test.describe("with reduced motion", () => {
     );
     expect(intents.length).toBeGreaterThan(0);
     expect(intents.filter((t, i) => intents.indexOf(t) !== i)).toEqual([]);
-    // The closing call to action is the one status meant to say more.
-    const callToAction = "claiming a spot on the waitlist";
-    expect(intents.filter((t) => t.length > 16 && t !== callToAction)).toEqual([]);
+    expect(intents.filter((t) => t.length > 16)).toEqual([]);
   });
 });

@@ -22,7 +22,7 @@ export function Hero() {
             data-intent="savoring title"
             {...build("type", "drafting title", { id: "hero.title" })}
           >
-            Many hands, <em>one clean fit.</em>
+            A pair of hands <em>for every piece.</em>
           </h1>
           <div
             className={styles.lede}
@@ -30,8 +30,8 @@ export function Hero() {
             {...build("type", "writing lede", { id: "hero.lede" })}
           >
             <p>
-              <span className={styles.brand}>kumi</span> gives every piece of your project its own
-              pair of hands.
+              <span className={styles.brand}>kumi</span> puts a crew of agents on your project, each
+              with its own piece to shape.
             </p>
           </div>
           <div className={styles.actions}>
@@ -67,7 +67,7 @@ export function Hero() {
             className={styles.caption}
             {...build("type", "captioning", { id: "hero.caption" })}
           >
-            the next innovation, sewn together
+            cut apart, drawn back into one
           </figcaption>
         </figure>
       </div>

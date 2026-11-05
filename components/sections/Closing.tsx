@@ -31,7 +31,7 @@ export function Closing() {
           <a
             href="#waitlist"
             className={button.primary}
-            data-intent="claiming a spot on the waitlist"
+            data-intent="claiming a spot"
             data-intent-press="here goes"
             {...build("box", "shaping button")}
           >
