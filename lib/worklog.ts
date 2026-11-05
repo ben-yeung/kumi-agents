@@ -1,78 +1,56 @@
-import { AGENTS, type AgentId } from "@/lib/agents";
+import type { AgentId } from "@/lib/agents";
 import type { Rng } from "@/lib/rng";
 
 export type LogEntry = { id: string; time: string; agent: AgentId; text: string };
 
-/** Seed entries for the work log; more are written live while it is read. */
+/** The afternoon so far: seed entries for the work log. */
 export const WORKLOG: readonly LogEntry[] = [
-  { id: "w1", time: "09:02", agent: "ren", text: "cut the brief into six pieces" },
-  { id: "w2", time: "09:03", agent: "juno", text: "took the payments docs, reading slowly" },
-  { id: "w3", time: "09:03", agent: "sol", text: "started a first pass on the welcome email" },
+  { id: "w1", time: "13:02", agent: "ren", text: "cut team billing into eight pieces" },
   {
-    id: "w4",
-    time: "09:11",
-    agent: "mika",
-    text: "found two flaky tests, both waiting on a clock",
+    id: "w2",
+    time: "13:06",
+    agent: "juno",
+    text: "compared two payment providers, chose the simpler one",
   },
+  {
+    id: "w3",
+    time: "13:14",
+    agent: "ren",
+    text: "wrote the billing migration, plans and seats first",
+  },
+  { id: "w4", time: "13:21", agent: "bea", text: "wired checkout to ren's new schema" },
   {
     id: "w5",
-    time: "09:14",
-    agent: "bea",
-    text: "drew the settings page, three columns became two",
+    time: "13:28",
+    agent: "mika",
+    text: "caught a double charge on webhook retry, fixed it",
   },
-  { id: "w6", time: "09:20", agent: "oki", text: "tidied imports left behind by ren" },
-  { id: "w7", time: "09:26", agent: "ivo", text: "aligned spacing across the new screens" },
+  { id: "w6", time: "13:35", agent: "sol", text: "settled the plan names with bea" },
+  {
+    id: "w7",
+    time: "13:41",
+    agent: "ivo",
+    text: "replayed a month of usage, totals drifted by 3 cents",
+  },
   {
     id: "w8",
-    time: "09:31",
+    time: "13:47",
     agent: "tao",
-    text: "checked the pieces against each other, all fit",
+    text: "lined up the merge order, ren's schema goes first",
   },
 ];
 
-/** Things each agent tends to write, in keeping with their temperament. */
-const NOTES: Record<AgentId, readonly string[]> = {
-  ren: [
-    "sketched the next piece: search",
-    "laid groundwork for the import flow",
-    "split the export job into three pieces",
-  ],
-  sol: [
-    "rewrote the empty state, kinder now",
-    "trimmed the release notes by half",
-    "found a plainer word for 'provision'",
-  ],
-  ivo: [
-    "measured the cards, nudged two by a pixel",
-    "lined the table up with the grid",
-    "evened out the rhythm of the headings",
-  ],
-  mika: [
-    "reviewed sol's copy, two small notes",
-    "added a test for the timezone edge",
-    "caught a missing loading state",
-  ],
-  juno: [
-    "wandered into the webhook retries, worth a look",
-    "read the rate limit docs twice",
-    "left a note about an older API version",
-  ],
-  oki: [
-    "swept up three unused helpers",
-    "renamed a confusing flag",
-    "closed the loose ends from this morning",
-  ],
-  bea: [
-    "drew the onboarding in four broad strokes",
-    "boxed out the pricing page",
-    "roughed in the mobile layout",
-  ],
-  tao: [
-    "signed off the settings piece",
-    "joined two pieces, clean fit",
-    "marked the import flow as ready",
-  ],
-};
+/** The rest of the afternoon, written live in this order, ending with the release. */
+export const LIVE_NOTES: readonly { agent: AgentId; text: string }[] = [
+  { agent: "juno", text: "wrote up the webhook gotchas, left them for mika" },
+  { agent: "ren", text: "backfilled every existing team, no gaps" },
+  { agent: "bea", text: "added seat management, mobile included" },
+  { agent: "mika", text: "covered mid-cycle upgrades, suite is green" },
+  { agent: "sol", text: "softened the failed-card email, cut it by a third" },
+  { agent: "ivo", text: "traced the 3 cents to rounding, invoices now match" },
+  { agent: "oki", text: "moved the old plans over, removed the dead routes" },
+  { agent: "tao", text: "joined all eight pieces, rolled out behind a flag" },
+];
 
 function addMinutes(time: string, minutes: number) {
   const [h, m] = time.split(":").map(Number);
@@ -80,22 +58,14 @@ function addMinutes(time: string, minutes: number) {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
-/**
- * The next live note: a different agent from the last one, a time a few
- * minutes on, and a line they have not written yet in this session.
- */
-export function nextLogEntry(rng: Rng, previous: readonly LogEntry[]): LogEntry {
+/** The next live note, a few minutes after the last one; null once the work is done. */
+export function nextLogEntry(rng: Rng, previous: readonly LogEntry[]): LogEntry | null {
+  const note = LIVE_NOTES[previous.length - WORKLOG.length];
+  if (!note) return null;
   const last = previous[previous.length - 1];
-  const used = new Set(previous.map((e) => e.text));
-  const candidates = AGENTS.filter(
-    (a) => a.id !== last?.agent && NOTES[a.id].some((n) => !used.has(n)),
-  );
-  const who = rng.pick(candidates.length ? candidates : AGENTS).id;
-  const fresh = NOTES[who].filter((n) => !used.has(n));
   return {
+    ...note,
     id: `live-${previous.length}`,
-    time: addMinutes(last?.time ?? "09:00", rng.int(2, 9)),
-    agent: who,
-    text: rng.pick(fresh.length ? fresh : NOTES[who]),
+    time: addMinutes(last.time, rng.int(2, 9)),
   };
 }

@@ -291,3 +291,13 @@
     height: 17rem;
   }
 }
+
+.goal {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+.goal span {
+  color: var(--ink);
+}

@@ -12,95 +12,102 @@ export type Lane = {
   progress: number;
 };
 
-/** The agents' work: eight notes, or the same steps as cards on a board. */
+/** The project the whole crew is on, shown above their work. */
+export const GOAL = "ship team billing";
+
+/**
+ * The agents' work on that goal, in workflow order: each piece builds on the
+ * ones before it, so the earlier a piece is, the further along it starts.
+ * Shown as eight notes, or the same steps as cards on a board.
+ */
 export const LANES: readonly Lane[] = [
   {
+    agent: "juno",
+    piece: "Choose a payments provider",
+    intent: "skimming docs",
+    steps: [
+      { text: "compare two providers", done: true },
+      { text: "test webhook signatures", done: true },
+      { text: "write up the gotchas", done: false },
+    ],
+    progress: 0.88,
+  },
+  {
     agent: "ren",
-    piece: "Draft data model",
+    piece: "Build the billing data model",
     intent: "admiring schema",
     steps: [
-      { text: "sketch entities", done: true },
-      { text: "name relations", done: true },
-      { text: "write schema", done: false },
+      { text: "model plans and seats", done: true },
+      { text: "write the migration", done: true },
+      { text: "backfill existing teams", done: false },
+    ],
+    progress: 0.8,
+  },
+  {
+    agent: "bea",
+    piece: "Build the upgrade flow",
+    intent: "sizing it up",
+    steps: [
+      { text: "lay out the plan picker", done: true },
+      { text: "wire up checkout", done: true },
+      { text: "add seat management", done: false },
     ],
     progress: 0.72,
   },
   {
+    agent: "mika",
+    piece: "Test failed payments",
+    intent: "trusting tests",
+    steps: [
+      { text: "simulate declined cards", done: true },
+      { text: "fix double charge on retry", done: true },
+      { text: "cover mid-cycle upgrades", done: false },
+    ],
+    progress: 0.68,
+  },
+  {
     agent: "sol",
-    piece: "Write onboarding copy",
+    piece: "Write the billing emails",
     intent: "proofing copy",
     steps: [
-      { text: "read brief", done: true },
-      { text: "first pass, plain words", done: false },
-      { text: "trim by a third", done: false },
+      { text: "name the plans", done: true },
+      { text: "write receipt emails", done: false },
+      { text: "soften the failed-card notice", done: false },
     ],
-    progress: 0.41,
+    progress: 0.52,
   },
   {
     agent: "ivo",
-    piece: "Align new screens",
-    intent: "eyeing the grid",
+    piece: "Reconcile invoice totals",
+    intent: "checking sums",
     steps: [
-      { text: "measure spacing", done: true },
-      { text: "set type scale", done: true },
-      { text: "even out margins", done: false },
+      { text: "replay a month of usage", done: true },
+      { text: "find the rounding drift", done: false },
+      { text: "match invoices to the cent", done: false },
     ],
-    progress: 0.64,
-  },
-  {
-    agent: "mika",
-    piece: "Tighten test suite",
-    intent: "trusting tests",
-    steps: [
-      { text: "find flaky ones", done: true },
-      { text: "fix clock", done: true },
-      { text: "add edge cases", done: false },
-    ],
-    progress: 0.93,
-  },
-  {
-    agent: "juno",
-    piece: "Read payments docs",
-    intent: "skimming docs",
-    steps: [
-      { text: "skim guides", done: true },
-      { text: "note webhooks", done: false },
-      { text: "flag gotchas", done: false },
-    ],
-    progress: 0.28,
+    progress: 0.46,
   },
   {
     agent: "oki",
-    piece: "Clear out old helpers",
+    piece: "Retire the old invoicing",
     intent: "sweeping up",
     steps: [
-      { text: "find unused code", done: true },
-      { text: "rename flags", done: false },
-      { text: "remove dead routes", done: false },
+      { text: "list what still uses it", done: true },
+      { text: "move old plans over", done: false },
+      { text: "remove the dead routes", done: false },
     ],
-    progress: 0.36,
-  },
-  {
-    agent: "bea",
-    piece: "Rough in settings page",
-    intent: "sizing it up",
-    steps: [
-      { text: "block out layout", done: true },
-      { text: "two columns, not three", done: true },
-      { text: "draw mobile view", done: false },
-    ],
-    progress: 0.58,
+    progress: 0.4,
   },
   {
     agent: "tao",
-    piece: "Check that pieces fit",
+    piece: "Fit and ship the release",
     intent: "checking joints",
     steps: [
-      { text: "compare pieces", done: true },
-      { text: "run full suite", done: false },
-      { text: "sign off work", done: false },
+      { text: "line up the merge order", done: true },
+      { text: "run checkout end to end", done: false },
+      { text: "roll out behind a flag", done: false },
     ],
-    progress: 0.19,
+    progress: 0.36,
   },
 ];
 
