@@ -13,10 +13,6 @@ Kumi (組) means to put together, and also a group or crew.
 It is the first half of _kumiko_, the Japanese craft of fitting small, separately cut pieces of wood into one lattice without nails.
 No single piece makes the panel; the strength comes from every joint fitting the next one.
 
-That is the product: many agents, each working on one piece of the job, fitted into one finished result.
-So the page is calm, unhurried and a little handmade, and the eight named agents are a crew of quiet craftspeople rather than a machine.
-It does not just describe this, it shows it: visitors watch the crew build the page in front of them, and get a cursor of their own to join in.
-
 The name and story are a draft, see [docs/narrative.md](docs/narrative.md).
 
 ## Running it
