@@ -132,7 +132,8 @@ test("the board holds the same work, and agents drag their own cards", async ({ 
       ),
     );
   const start = await columns();
-  expect(Object.values(start).flat()).toHaveLength(24);
+  // Agents may already have added tasks of their own by now.
+  expect(Object.values(start).flat().length).toBeGreaterThanOrEqual(24);
 
   await page.evaluate(() => {
     window.__drag = [];

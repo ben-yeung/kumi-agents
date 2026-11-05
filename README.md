@@ -71,8 +71,8 @@ These run in a real browser with Playwright Test, against a production build on 
 Run `npx playwright install chromium` once first.
 
 ```bash
-npm run e2e                             # behavior checks, under three minutes
-npm run e2e -- e2e/crew.spec.ts         # one file
+npm run e2e                             # behavior checks, about three minutes
+npm run e2e -- e2e/board.spec.ts        # one file
 npm run e2e -- -g "footer"              # tests matching a name
 npm run e2e:shots                       # every size, both themes, intro to finished page
 node e2e/intro-frames.mjs http://localhost:3000  # frames of the intro and scroll build
