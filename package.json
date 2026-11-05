@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test --project=checks",
+    "e2e:shots": "playwright test --project=shots",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

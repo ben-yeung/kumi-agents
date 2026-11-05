@@ -11,6 +11,6 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     css: { modules: { classNameStrategy: "non-scoped" } },
-    exclude: ["node_modules/**", ".next/**"],
+    exclude: ["node_modules/**", ".next/**", "e2e/**"],
   },
 });
