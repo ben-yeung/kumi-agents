@@ -136,9 +136,7 @@ await symmetry.locator("[data-swarm-controls]").waitFor();
     ),
   );
   const repeats = intents.filter((t, i) => intents.indexOf(t) !== i);
-  // The closing call to action is the one status meant to say more.
-  const callToAction = "claiming a spot on the waitlist";
-  const long = intents.filter((t) => t.length > 16 && t !== callToAction);
+  const long = intents.filter((t) => t.length > 16);
   check("hover statuses are unique", repeats.length === 0, repeats.join(", "));
   check(
     "hover statuses are short",
