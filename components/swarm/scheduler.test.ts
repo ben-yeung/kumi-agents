@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { backlog, isReady, pickTask, sectionDone, type SchedulerState } from "./scheduler";
+import {
+  LIVE_ORDER,
+  backlog,
+  isReady,
+  missingOwners,
+  pickTask,
+  sectionBuilding,
+  sectionDone,
+  type SchedulerState,
+} from "./scheduler";
 import type { Task, TaskStatus } from "./types";
 
 function task(id: string, extra: Partial<Task> = {}): Task {
@@ -44,11 +53,32 @@ describe("scheduler", () => {
     expect(pickTask("ren", gone)?.id).toBe("a");
   });
 
-  it("respects preferences only while that agent is on the crew", () => {
-    const t = task("a", { prefer: "mika" });
-    expect(pickTask("ren", state([t]))?.id).toBe("a");
+  it("never gives signed work to anyone but its owner", () => {
+    const t = task("a", { owner: "mika" });
+    expect(pickTask("ren", state([t]))).toBeNull();
     expect(pickTask("ren", state([t], {}, { crew: ["ren", "mika"] }))).toBeNull();
     expect(pickTask("mika", state([t], {}, { crew: ["ren", "mika"] }))?.id).toBe("a");
+  });
+
+  it("names the owners who need calling in, soonest first", () => {
+    const tasks = [
+      task("late", { owner: "tao", order: 5 }),
+      task("soon", { owner: "mika", order: 1 }),
+      task("again", { owner: "mika", order: 2 }),
+      task("here", { owner: "ren", order: 0 }),
+      task("taken", { owner: "bea", order: 0 }),
+      task("waiting", { owner: "oki", after: ["late"] }),
+    ];
+    expect(missingOwners(state(tasks, { taken: "claimed" }))).toEqual(["mika", "tao"]);
+  });
+
+  it("knows when a section is still being built, ignoring later live work", () => {
+    const tasks = [task("a"), task("later", { section: "other" })];
+    expect(sectionBuilding(state(tasks))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "claimed" }))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "done" }))).toBe(false);
+    const live = [task("a"), task("note", { order: LIVE_ORDER })];
+    expect(sectionBuilding(state(live, { a: "done" }))).toBe(false);
   });
 
   it("takes the lowest order, then the nearest", () => {
@@ -60,6 +90,14 @@ describe("scheduler", () => {
     const dist = (t: Task) => (t.id === "near" ? 10 : 100);
     expect(pickTask("ren", state(tasks), dist)?.id).toBe("near");
     expect(pickTask("ren", state([tasks[2], tasks[0]]), dist)?.id).toBe("far");
+  });
+
+  it("puts work the visitor is looking at first", () => {
+    const tasks = [task("above", { order: 1 }), task("here", { section: "seen", order: 2 })];
+    const active = new Set(["s", "seen"]);
+    const s = state(tasks, {}, { activeSections: active, focus: new Set(["seen"]) });
+    expect(pickTask("ren", s)?.id).toBe("here");
+    expect(pickTask("ren", state([tasks[0]], {}, { focus: new Set(["seen"]) }))?.id).toBe("above");
   });
 
   it("skips claimed and done work", () => {

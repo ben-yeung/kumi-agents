@@ -83,24 +83,14 @@ export function Swarm() {
   );
 }
 
-const IDLE_TAG_QUIET_MS = 2400;
-
 function AgentCursor({ runtime }: { runtime: AgentRuntime }) {
   const snap = useSyncExternalStore(runtime.subscribe, runtime.snapshot, runtime.snapshot);
   const [tagMode] = useTagMode();
-  // Idle agents say what they are up to briefly, then fall quiet to just a name.
-  const [quietFor, setQuietFor] = useState<string | null>(null);
-  useEffect(() => {
-    if (!snap.idle) return;
-    const t = window.setTimeout(() => setQuietFor(snap.action), IDLE_TAG_QUIET_MS);
-    return () => window.clearTimeout(t);
-  }, [snap.idle, snap.action]);
-  const quiet = snap.idle && quietFor === snap.action;
   return (
     <motion.div
       className={styles.agent}
       style={{ x: runtime.x, y: runtime.y, "--c": runtime.agent.color } as never}
-      data-idle={snap.idle}
+      data-swarm-agent=""
       data-pressed={snap.pressed}
     >
       <div className={styles.press}>
@@ -108,26 +98,85 @@ function AgentCursor({ runtime }: { runtime: AgentRuntime }) {
       </div>
       <CursorTag
         name={runtime.agent.name}
-        action={tagMode === "actions" && !quiet ? snap.action : null}
+        action={tagMode === "actions" ? snap.action : null}
         flipX={snap.flipX}
       />
     </motion.div>
   );
 }
 
-/** Who is on the crew right now. */
+/** Who is on the crew right now; hover, focus or tap to see what they are up to. */
 function CrewCount({ crew }: { crew: AgentRuntime[] }) {
+  const [open, setOpen] = useState(false);
+  // A mouse has already opened the menu by hovering; its click must not close it.
+  const hovering = useRef(false);
   return (
-    <div className={styles.crew} data-swarm-crew data-intent="counting heads">
-      <span className={styles.crewDots} aria-hidden="true">
-        {crew.map((a) => (
-          <span key={a.id} style={{ "--c": a.agent.color } as React.CSSProperties} />
-        ))}
-      </span>
-      <span>
-        {crew.length} {crew.length === 1 ? "hand" : "hands"}
-      </span>
+    <div
+      className={styles.crewAnchor}
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "mouse") return;
+        hovering.current = true;
+        setOpen(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType !== "mouse") return;
+        hovering.current = false;
+        setOpen(false);
+      }}
+    >
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className={styles.crewMenu}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.18 }}
+          >
+            <ul id="crew-menu" aria-label="Agents at work" className={styles.crewList}>
+              {crew.map((a) => (
+                <CrewMember key={a.id} runtime={a} />
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <button
+        type="button"
+        className={styles.crew}
+        data-swarm-crew
+        data-intent="counting heads"
+        aria-expanded={open}
+        aria-controls="crew-menu"
+        onClick={() => !hovering.current && setOpen((o) => !o)}
+        onFocus={(e) => e.target.matches(":focus-visible") && setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        <span className={styles.crewDots} aria-hidden="true">
+          {crew.map((a) => (
+            <span key={a.id} style={{ "--c": a.agent.color } as React.CSSProperties} />
+          ))}
+        </span>
+        <span>
+          {crew.length} {crew.length === 1 ? "hand" : "hands"}
+        </span>
+      </button>
     </div>
+  );
+}
+
+function CrewMember({ runtime }: { runtime: AgentRuntime }) {
+  const { action } = useSyncExternalStore(runtime.subscribe, runtime.snapshot, runtime.snapshot);
+  return (
+    <li
+      className={styles.crewMember}
+      style={{ "--c": runtime.agent.color } as React.CSSProperties}
+      data-intent={runtime.agent.greeting}
+    >
+      <span className={styles.crewDot} aria-hidden="true" />
+      <span className={styles.crewName}>{runtime.agent.name}</span>
+      <span className={styles.crewAction}>{action ?? "on the way"}</span>
+    </li>
   );
 }
 

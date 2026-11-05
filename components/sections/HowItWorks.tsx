@@ -1,6 +1,7 @@
 import { agent, type AgentId } from "@/lib/agents";
 import { build, buildSection } from "@/components/swarm/build";
 import layout from "@/components/ui/layout.module.css";
+import { Strand } from "@/components/ui/Strand";
 import styles from "./HowItWorks.module.css";
 
 const STEPS: { title: string; body: string; by: AgentId; intent: string }[] = [
@@ -93,6 +94,15 @@ export function HowItWorks() {
             );
           })}
         </ol>
+
+        <figure
+          className={styles.figure}
+          role="img"
+          aria-label="One stroke of ink is cut into eight colored strands, worked side by side, then drawn back into one stroke."
+          data-intent="tracing strands"
+        >
+          <Strand />
+        </figure>
       </div>
     </section>
   );

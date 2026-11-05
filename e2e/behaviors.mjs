@@ -26,7 +26,12 @@ async function heroSettledMs(page) {
   const shortMs = await heroSettledMs(page);
   const second = await page.evaluate(() => sessionStorage.getItem("kumi-last-choreo"));
   check("intro settles at a calm pace", fullMs > 6000 && fullMs < 20000, `${fullMs}ms (${first})`);
-  check("reload keeps the same weight", shortMs > fullMs * 0.6, `${shortMs}ms (${second})`);
+  // Choreographies differ in length, so each is held to the range rather than to the other.
+  check(
+    "reload keeps the same weight",
+    shortMs > 6000 && shortMs < 20000,
+    `${shortMs}ms (${second})`,
+  );
   check("reload picks a different choreography", first !== second, `${first} -> ${second}`);
 
   // Replay rebuilds the hero.
@@ -41,13 +46,13 @@ async function heroSettledMs(page) {
   const rows = await page.locator("#worklog > li").count();
   check("work log grows live", rows > 8, `${rows} rows`);
 
-  // Spare hands go home once everything is settled.
+  // Hands head off to other work once everything is settled; a few stay, in rotation.
   await page.evaluate(() =>
     window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
   );
   await page.waitForTimeout(60000);
   const label = await page.locator("[data-swarm-crew]").textContent();
-  check("crew thins when idle", Number(label.match(/(\d+) hands?/)?.[1]) <= 3, label);
+  check("crew thins when settled", Number(label.match(/(\d+) hands?/)?.[1]) <= 6, label);
   const unbuilt = await page.locator("[data-build]:not([data-built])").count();
   check("everything built", unbuilt === 0, `${unbuilt} unbuilt`);
 

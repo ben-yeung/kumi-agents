@@ -1,3 +1,4 @@
+import type { EffectContext } from "@/components/swarm/effects";
 import type { AgentId } from "@/lib/agents";
 
 /**
@@ -44,14 +45,26 @@ export type Task = {
   parent: string | null;
   /** Hard assignment (choreographed hero work). */
   agent?: AgentId;
-  /** Soft preference: only this agent takes it while they are on the crew. */
-  prefer?: AgentId;
+  /** The work is theirs by name: nobody else takes it, the engine calls them in. */
+  owner?: AgentId;
   label: string;
   /** Seconds to wait after claiming, before starting. */
   delay?: number;
   rewrite?: Rewrite;
   /** Typing pace multiplier (1 = normal). */
   pace?: number;
+  /** Replaces the build effect, for revisiting something already built. */
+  errand?: (ctx: EffectContext) => Promise<void>;
+};
+
+/** Work on a finished part of the page, done by a named agent. */
+export type Errand = {
+  agent: AgentId;
+  label: string;
+  section: string;
+  /** Where the agent is headed; used to weigh this against other work. */
+  el: HTMLElement;
+  run: (ctx: EffectContext) => Promise<void>;
 };
 
 export type TaskStatus = "claimed" | "done";

@@ -7,6 +7,8 @@ export type SchedulerState = {
   activeSections: ReadonlySet<string>;
   /** Agents currently on the crew. */
   crew: readonly AgentId[];
+  /** Sections the visitor is looking at; their work comes first. */
+  focus?: ReadonlySet<string>;
 };
 
 /** A task can start when its section is live and everything it waits on is done. */
@@ -22,9 +24,10 @@ function hasTask(state: SchedulerState, id: string) {
 }
 
 export function canTake(task: Task, agent: AgentId, state: SchedulerState) {
-  // Assigned work falls back to anyone if its agent has left the crew.
+  // Signed work is only ever done by the agent whose name is on it.
+  if (task.owner) return task.owner === agent;
+  // Choreographed work falls back to anyone if its agent has left the crew.
   if (task.agent && state.crew.includes(task.agent)) return task.agent === agent;
-  if (task.prefer && state.crew.includes(task.prefer)) return task.prefer === agent;
   return true;
 }
 
@@ -37,10 +40,11 @@ export function pickTask(
   state: SchedulerState,
   distanceTo: (task: Task) => number = () => 0,
 ): Task | null {
+  const ready = state.tasks.filter((t) => isReady(t, state) && canTake(t, agent, state));
+  const seen = ready.filter((t) => state.focus?.has(t.section));
   let best: Task | null = null;
   let bestDist = Infinity;
-  for (const task of state.tasks) {
-    if (!isReady(task, state) || !canTake(task, agent, state)) continue;
+  for (const task of seen.length ? seen : ready) {
     if (best === null || task.order < best.order) {
       best = task;
       bestDist = distanceTo(task);
@@ -60,6 +64,27 @@ export function pickTask(
 /** Ready work nobody has claimed yet; used to speed the crew up when behind. */
 export function backlog(state: SchedulerState) {
   return state.tasks.filter((t) => isReady(t, state)).length;
+}
+
+/** Agents with ready work who are not on the crew, soonest first. */
+export function missingOwners(state: SchedulerState): AgentId[] {
+  const ready = state.tasks.filter(
+    (t) => t.owner && !state.crew.includes(t.owner) && isReady(t, state),
+  );
+  return [...new Set(ready.sort((a, b) => a.order - b.order).map((t) => t.owner!))];
+}
+
+/** Work added to finished sections runs from here up: notes, card moves and the like. */
+export const LIVE_ORDER = 10_000;
+
+/** A section on the page is still being built, not counting that later work. */
+export function sectionBuilding(state: SchedulerState) {
+  return state.tasks.some(
+    (t) =>
+      t.order < LIVE_ORDER &&
+      state.activeSections.has(t.section) &&
+      state.status.get(t.id) !== "done",
+  );
 }
 
 /** Every task in a section is done. */
