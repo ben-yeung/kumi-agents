@@ -49,6 +49,7 @@
   border-radius: 999px;
   font-size: var(--step--1);
   font-family: var(--font-mono);
+  white-space: nowrap;
   transition:
     background-color 200ms var(--ease-soft),
     border-color 200ms var(--ease-soft);
@@ -65,5 +66,12 @@
   }
   .controls {
     margin-left: auto;
+  }
+}
+
+/* The smallest phones cannot fit the full label beside the wordmark. */
+@media (max-width: 22rem) {
+  .joinRest {
+    display: none;
   }
 }
