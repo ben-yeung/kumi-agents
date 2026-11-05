@@ -1,0 +1,111 @@
+// Landing somewhere other than the top: the section in view builds first, then
+// the crew works back up the page, the hero last. Whatever the visitor scrolls
+// to takes priority.
+// Usage: node e2e/landing.mjs http://localhost:<port>
+import { chromium } from "@playwright/test";
+
+const base = process.argv[2] ?? "http://localhost:3000";
+const results = [];
+const check = (name, ok, detail = "") => results.push({ name, ok, detail });
+const browser = await chromium.launch();
+
+/** Records the moment each section first has work built, and finishes. */
+const track = () => {
+  window.__build = { first: {}, done: {} };
+  const t0 = performance.now();
+  setInterval(() => {
+    const swarm = document.documentElement.hasAttribute("data-swarm");
+    if (!swarm) return;
+    for (const s of document.querySelectorAll("[data-build-section]")) {
+      const name = s.dataset.buildSection;
+      const all = s.querySelectorAll("[data-build]");
+      const built = s.querySelectorAll("[data-build][data-built]").length;
+      const t = Math.round(performance.now() - t0);
+      if (built > 0 && !(name in window.__build.first)) window.__build.first[name] = t;
+      if (built === all.length && built > 0 && !(name in window.__build.done)) {
+        window.__build.done[name] = t;
+      }
+    }
+  }, 50);
+};
+
+const allBuilt = (page, timeout = 150000) =>
+  page.waitForFunction(
+    () => document.querySelectorAll("[data-build]:not([data-built])").length === 0,
+    null,
+    { timeout },
+  );
+
+async function landing(name, arrive) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.addInitScript(track);
+  await arrive(page);
+  await page.waitForTimeout(1200);
+  const nav = await page.evaluate(() => ({
+    y: Math.round(scrollY),
+    hero: document.querySelectorAll('[data-build-section="hero"] [data-built]').length,
+  }));
+  const log = await page.evaluate(
+    () =>
+      document.querySelectorAll('[data-build-section="log"] [data-build]:not([data-built])').length,
+  );
+  await allBuilt(page);
+  const { first, done } = await page.evaluate(() => window.__build);
+  check(`${name}: page opens at the section`, nav.y > 500, `scrollY ${nav.y}`);
+  check(
+    `${name}: the viewed section finishes before anything above starts`,
+    done.log < Math.min(first.method, first.hands, first.hero),
+    JSON.stringify({ log: done.log, first }),
+  );
+  check(
+    `${name}: the crew works back up the page`,
+    first.method < first.hands && first.hands < first.hero,
+    JSON.stringify(first),
+  );
+  check(`${name}: work had started right away`, log < 20, `${log} left in the log after 1.2s`);
+  const replay = await page.getByRole("button", { name: "replay" }).count();
+  check(`${name}: replay is offered, not skip intro`, replay === 1);
+  check(`${name}: no errors`, errors.length === 0, errors.join(" | "));
+  await page.close();
+}
+
+await landing("hash link", (page) => page.goto(`${base}/#log`));
+await landing("reload mid-page", async (page) => {
+  await page.goto(`${base}/#log`);
+  await page.waitForTimeout(800);
+  await page.reload();
+});
+
+// Scrolling elsewhere while the crew works up the page takes priority.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.addInitScript(track);
+  await page.goto(`${base}/#waitlist`);
+  await page.waitForFunction(() => document.querySelector("#waitlist [data-built]"));
+  await page.evaluate(() =>
+    document.getElementById("hands").scrollIntoView({ behavior: "instant" }),
+  );
+  await allBuilt(page);
+  const { first, done } = await page.evaluate(() => window.__build);
+  check(
+    "scrolling up pulls that section to the front",
+    done.hands < first.hero && first.hands < (first.method ?? Infinity),
+    JSON.stringify({ first, handsDone: done.hands }),
+  );
+  await page.close();
+}
+
+// A normal visit still opens with the hero intro.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(base);
+  await page.getByRole("button", { name: "skip intro" }).waitFor({ timeout: 8000 });
+  check("loading at the top still plays the intro", true);
+  await page.close();
+}
+
+await browser.close();
+for (const r of results) console.log(`${r.ok ? "PASS" : "FAIL"}  ${r.name}  ${r.detail}`);
+process.exit(results.every((r) => r.ok) ? 0 : 1);

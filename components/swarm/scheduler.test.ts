@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  LIVE_ORDER,
   backlog,
   isReady,
   missingOwners,
   pickTask,
+  sectionBuilding,
   sectionDone,
   type SchedulerState,
 } from "./scheduler";
@@ -68,6 +70,15 @@ describe("scheduler", () => {
       task("waiting", { owner: "oki", after: ["late"] }),
     ];
     expect(missingOwners(state(tasks, { taken: "claimed" }))).toEqual(["mika", "tao"]);
+  });
+
+  it("knows when a section is still being built, ignoring later live work", () => {
+    const tasks = [task("a"), task("later", { section: "other" })];
+    expect(sectionBuilding(state(tasks))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "claimed" }))).toBe(true);
+    expect(sectionBuilding(state(tasks, { a: "done" }))).toBe(false);
+    const live = [task("a"), task("note", { order: LIVE_ORDER })];
+    expect(sectionBuilding(state(live, { a: "done" }))).toBe(false);
   });
 
   it("takes the lowest order, then the nearest", () => {

@@ -13,7 +13,7 @@ const SAMPLE_MS = 100;
 /** A label held for fewer samples than this is still being typed into the tag. */
 const STABLE_SAMPLES = 4;
 const LIMITS = { stillSeconds: 4.5, shortestLabelSeconds: 1.2 };
-const PASSIVE = /\b(rest|paus|wait|leav|stretch|tidy)/;
+const PASSIVE = /\b(rest|paus|wait|leav|stretch|tidy|pairing)/;
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -84,7 +84,7 @@ function longestStill(samples) {
   return longest / 1000;
 }
 
-const totals = { still: 0, shortest: Infinity, passive: new Set() };
+const totals = { still: 0, shortest: Infinity, passive: new Set(), midBuild: new Set() };
 
 for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   const mine = runs.filter((r) => r.choreography === name);
@@ -103,6 +103,11 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
   const shortest = Math.min(...middle.map((r) => (r.end - r.start) / 1000));
   const seconds = agents.reduce((sum, list) => sum + list.length * (SAMPLE_MS / 1000), 0);
   const final = words.filter(whole);
+  // While the hero is going up, tags only ever name real build work.
+  const introWords = new Set(
+    mine.flatMap((r) => r.samples.filter((s) => !s.settled).map((s) => s.action)),
+  );
+  final.filter((w) => introWords.has(w) && !tasks.has(w)).forEach((w) => totals.midBuild.add(w));
   final.filter((w) => PASSIVE.test(w)).forEach((w) => totals.passive.add(w));
   totals.still = Math.max(totals.still, still);
   totals.shortest = Math.min(totals.shortest, shortest);
@@ -118,9 +123,11 @@ for (const name of [...new Set(runs.map((r) => r.choreography))].sort()) {
 const ok =
   totals.still <= LIMITS.stillSeconds &&
   totals.shortest >= LIMITS.shortestLabelSeconds &&
-  totals.passive.size === 0;
+  totals.passive.size === 0 &&
+  totals.midBuild.size === 0;
 console.log(
   `\nworst: still ${totals.still.toFixed(1)}s, shortest label ${totals.shortest.toFixed(1)}s, ` +
-    `passive [${[...totals.passive].join(", ")}]`,
+    `passive [${[...totals.passive].join(", ")}], ` +
+    `chores mid-build [${[...totals.midBuild].join(", ")}]`,
 );
 if (strict) process.exit(ok ? 0 : 1);

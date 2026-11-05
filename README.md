@@ -42,7 +42,9 @@ The swarm engine in `components/swarm/` reads those attributes and turns each on
 
 Anything marked with an agent's name is only ever done by that agent.
 If they are away the engine calls them in, and the crew counter follows.
-Between jobs nobody stands about: agents check finished work with a loupe or line up what is next, and they leave the page for a named objective.
+Once a section is finished, agents do a few chores from their own craft, and each piece of work gets one pass.
+While a section is going up, anyone without a part left stays quiet.
+When nothing is left they leave for a named objective, so the page stays uncrowded.
 Live work uses the same rule: work-log rows, and errands such as moving a card along the #hands board.
 
 The overall pace is one constant, `TEMPO` in `engine.ts`.

@@ -71,6 +71,19 @@ export function missingOwners(state: SchedulerState): AgentId[] {
   return [...new Set(ready.sort((a, b) => a.order - b.order).map((t) => t.owner!))];
 }
 
+/** Work added to finished sections runs from here up: notes, card moves and the like. */
+export const LIVE_ORDER = 10_000;
+
+/** A section on the page is still being built, not counting that later work. */
+export function sectionBuilding(state: SchedulerState) {
+  return state.tasks.some(
+    (t) =>
+      t.order < LIVE_ORDER &&
+      state.activeSections.has(t.section) &&
+      state.status.get(t.id) !== "done",
+  );
+}
+
 /** Every task in a section is done. */
 export function sectionDone(section: string, state: SchedulerState) {
   return state.tasks

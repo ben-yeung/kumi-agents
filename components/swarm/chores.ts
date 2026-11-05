@@ -60,19 +60,21 @@ export const PLANS: readonly string[] = [
   "scoping what's next",
 ];
 
-/** The longest finished work goes without another look from anyone (ms). */
-export const RECHECK_MS = 120_000;
+/** Chores in one section on a visit; the rest of it does not need the extra hands. */
+export const CHORES_PER_SECTION = 4;
 
-/** Pieces of finished work nobody has been over lately. */
-export function freshWork<T extends { el: unknown }>(
+/**
+ * What is left to go over. `group` is the whole piece an element belongs to, so
+ * a note gets one pass rather than one each for its title, list and rule.
+ */
+export function freshWork<T extends { group: unknown; section: string }>(
   options: readonly T[],
-  checkedAt: ReadonlyMap<unknown, number>,
-  now: number,
+  checked: ReadonlySet<unknown>,
+  doneIn: ReadonlyMap<string, number>,
 ): T[] {
-  return options.filter((o) => {
-    const at = checkedAt.get(o.el);
-    return at === undefined || now - at >= RECHECK_MS;
-  });
+  return options.filter(
+    (o) => !checked.has(o.group) && (doneIn.get(o.section) ?? 0) < CHORES_PER_SECTION,
+  );
 }
 
 /** A chore this agent can do on work of this kind, never the one they just did. */

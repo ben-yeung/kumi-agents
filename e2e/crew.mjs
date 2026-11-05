@@ -76,6 +76,8 @@ await Promise.all(
     );
     check(`${width}: more than three agents appear`, faces.length > 3, faces.join(" "));
     check(`${width}: the counter moves`, new Set(counts).size > 1, counts.join(" "));
+    const lately = counts.slice(-8).map(Number);
+    check(`${width}: the page stays uncrowded`, Math.max(...lately) <= 4, lately.join(" "));
     check(`${width}: no errors`, errors.length === 0, errors.join(" | "));
     await page.close();
   }),
@@ -168,7 +170,7 @@ for (const width of [1440, 2560]) {
   const whole = crewWords.filter((w) => !crewWords.some((o) => o !== w && o.startsWith(w)));
   const heavy = whole.filter((w) => /review|proofread/.test(w));
   check("reviewing is not everyone's job", heavy.length <= 1, whole.join(", "));
-  const passive = whole.filter((w) => /\b(rest|paus|wait|leav|stretch|tidy)/.test(w));
+  const passive = whole.filter((w) => /\b(rest|paus|wait|leav|stretch|tidy|pairing)/.test(w));
   check("no passive statuses", passive.length === 0, passive.join(", "));
 
   await page.locator("[data-swarm-crew]").hover();
