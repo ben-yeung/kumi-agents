@@ -664,10 +664,12 @@ export class SwarmEngine {
   /** Nothing to do nearby: work out what is next. */
   private async prepare(agent: AgentRuntime, live: () => boolean) {
     const plan = pickPlan(this.rng, this.lastChore.get(agent.id) ?? null);
+    this.midChore.add(agent.id);
     this.lastChore.set(agent.id, plan);
     agent.setAction(plan);
     await agent.moveTo(this.marginPoint(agent.pos()), { speed: 0.6 });
     if (live()) await agent.sleep(this.rng.int(900, 1600));
+    this.midChore.delete(agent.id);
   }
 
   /**
@@ -780,6 +782,9 @@ export class SwarmEngine {
   /* --------------------------------------------------------- sections */
 
   private observeSections() {
+    // What is tucked under the pinned header is not on show.
+    const header = document.querySelector("header")?.offsetHeight ?? 0;
+    const rootMargin = `-${header}px 0px -18% 0px`;
     this.io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -789,7 +794,7 @@ export class SwarmEngine {
           this.io?.unobserve(entry.target);
         }
       },
-      { rootMargin: "0px 0px -18% 0px" },
+      { rootMargin },
     );
     this.focusIo = new IntersectionObserver(
       (entries) => {
@@ -800,7 +805,7 @@ export class SwarmEngine {
         }
         this.workUpThePage();
       },
-      { rootMargin: "0px 0px -18% 0px" },
+      { rootMargin },
     );
     document.querySelectorAll<HTMLElement>("[data-build-section]").forEach((el) => {
       // The header is pinned on screen, so it says nothing about where the visitor is.
