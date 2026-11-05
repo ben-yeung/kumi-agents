@@ -144,6 +144,36 @@ await landing("reload mid-page", async (page) => {
   await page.close();
 }
 
+// Nothing in the footer shows before an agent has put it there.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.addInitScript(() => {
+    window.__early = new Set();
+    setInterval(() => {
+      if (!document.documentElement.hasAttribute("data-swarm")) return;
+      const parts = document.querySelectorAll('footer svg, footer [class*="word"], footer p');
+      for (const el of parts) {
+        const unbuilt = !el.closest("[data-build]")?.hasAttribute("data-built");
+        const shown = !el.closest("[data-build]") || getComputedStyle(el).opacity !== "0";
+        if (unbuilt && shown && !el.closest("[data-building]")) {
+          window.__early.add(el.textContent.trim() || el.tagName);
+        }
+      }
+    }, 30);
+  });
+  await page.goto(`${base}/#waitlist`);
+  await page.waitForFunction(
+    () =>
+      document.querySelector("footer [data-built]") &&
+      !document.querySelector("footer [data-build]:not([data-built])"),
+    null,
+    { timeout: 60000 },
+  );
+  const early = await page.evaluate(() => [...window.__early]);
+  check("the footer stays hidden until it is built", early.length === 0, early.join(" | "));
+  await page.close();
+}
+
 // A normal visit still opens with the hero intro.
 {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });

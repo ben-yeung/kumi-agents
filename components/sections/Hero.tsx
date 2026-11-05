@@ -22,7 +22,7 @@ export function Hero() {
             data-intent="savoring title"
             {...build("type", "drafting title", { id: "hero.title" })}
           >
-            Many hands. <em>One clean fit.</em>
+            Many hands, <em>one clean fit.</em>
           </h1>
           <div
             className={styles.lede}

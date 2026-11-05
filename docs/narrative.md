@@ -38,11 +38,11 @@ In the hero, the second title line is sans-serif, and "kumi" in the description 
 
 ## One-liner
 
-> Many hands. One clean fit.
+> Many hands, one clean fit.
 
 ## Hero
 
-**Headline:** Many hands. One clean fit.
+**Headline:** Many hands, one clean fit.
 
 **Subcopy:**
 

@@ -15,7 +15,7 @@ export function Nav() {
     <header className={styles.header} {...buildSection("hero")}>
       <nav className={`${layout.container} ${styles.nav}`} aria-label="Main">
         <a href="#top" className={styles.brand} data-intent="admiring logo" aria-label="Kumi, home">
-          <Wordmark buildable />
+          <Wordmark buildId="nav" />
         </a>
         <ul className={styles.links} {...build("list", "laying nav", { id: "nav.links" })}>
           {LINKS.map((l) => (
