@@ -70,7 +70,8 @@ Eight notes show every agent working on their own piece of it at the same time, 
 The work log tells the same afternoon, and its live notes run in order through to the release.
 
 A switch flips the notes to a board with planned, in progress and completed columns, showing the same steps as cards.
-Agents keep coming back to move their own work along, ticking off steps on the notes or dragging cards across the board.
+Agents keep coming back to move their own work along, ticking off steps on the notes, or taking cards to 100% and dragging them to Completed on the board.
+When an agent finishes a piece they add the next one, so the afternoon keeps going until the release is handed over.
 
 ### 2. How it works
 

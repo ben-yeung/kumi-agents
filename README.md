@@ -73,6 +73,7 @@ Run `npx playwright install chromium` once first.
 ```bash
 node e2e/behaviors.mjs http://localhost:3000       # behavior checks
 node e2e/crew.mjs http://localhost:3000            # authorship, rotation, notes, board, footer
+node e2e/board.mjs http://localhost:3000           # cards finish at 100%, agents add tasks, replay
 node e2e/landing.mjs http://localhost:3000         # opening mid-page builds what is in view first
 node e2e/intro-idle.mjs http://localhost:3000 --strict  # nobody stands still or says anything passive
 node e2e/screenshots.mjs http://localhost:3000     # mobile, laptop, 4K, both themes

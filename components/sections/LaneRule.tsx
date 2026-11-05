@@ -6,6 +6,8 @@ export function LaneRule({
   ...rest
 }: { progress: number } & Record<`data-${string}`, string>) {
   const end = 6 + progress * 188;
+  // The hand wobble comes in as the line gets going, so 0% is only a dot.
+  const wobble = Math.min(progress * 8, 1);
   return (
     <svg
       className={styles.rule}
@@ -18,7 +20,7 @@ export function LaneRule({
       <path
         className={styles.ruleDone}
         data-stroke=""
-        d={`M6 6.5 C ${6 + (end - 6) * 0.3} 4.5, ${6 + (end - 6) * 0.6} 8, ${end} 5.8`}
+        d={`M6 6.5 C ${6 + (end - 6) * 0.3} ${6.5 - 2 * wobble}, ${6 + (end - 6) * 0.6} ${6.5 + 1.5 * wobble}, ${end} ${6.5 - 0.7 * wobble}`}
       />
     </svg>
   );
