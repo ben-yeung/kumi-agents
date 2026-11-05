@@ -1,7 +1,17 @@
-# Kumi landing page
+<p align="center">
+  <img src="app/icon.svg" alt="Kumi logo" width="96" height="96">
+</p>
+
+# Kumi Agents
 
 A landing page for Kumi, a fictional agentic startup built around parallel agent work.
 The page builds itself: a crew of agent cursors draws, types and places the real page content, in parallel, as it scrolls into view.
+
+## The story
+
+Kumi (組) means to put together, and also a group or crew.
+It is the first half of _kumiko_, the Japanese craft of fitting small, separately cut pieces of wood into one lattice without nails.
+No single piece makes the panel; the strength comes from every joint fitting the next one.
 
 The name and story are a draft, see [docs/narrative.md](docs/narrative.md).
 
